@@ -24,7 +24,8 @@ codecov:
 golangci-lint:
 	golangci-lint run ./...	
 
-run:
+# server
+runsvr:
 	go run -ldflags \
 		"-X main.buildVersion=$(BUILD_VERSION) -X 'main.buildDate=$(BUILD_DATE)' -X 'main.buildCommit=$(BUILD_COMMIT)' "\
 		cmd/gophkeeper/*.go
@@ -34,3 +35,14 @@ buildsrv: tests staticcheck vet
 		-ldflags \
 		"-X main.buildVersion=$(BUILD_VERSION) -X 'main.buildDate=$(BUILD_DATE)' -X 'main.buildCommit="$(BUILD_COMMIT)"' "\
 		cmd/gophkeeper/*.go
+
+
+# client
+runcli:
+	go run cmd/grpcclient/main.go
+
+# gRPC
+protoc: 
+	protoc --go_out=gen/go --go_opt=paths=source_relative \
+	--go-grpc_out=gen/go --go-grpc_opt=paths=source_relative \
+	proto/v1/gophkeeper.proto

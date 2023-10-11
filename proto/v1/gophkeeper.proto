@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+//import "buf/validate/validate.proto";
+
+package gophermart.v1;
+
+option go_package = "github.com/eugene982/yp-gophermart/proto";
+
+service GophKeeper {
+    // Ping проверка соединения
+    rpc Ping(google.protobuf.Empty) returns (PingResponse);
+}
+
+// Ping
+message PingResponse {
+    string message = 1;
+}
+

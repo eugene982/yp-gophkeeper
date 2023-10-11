@@ -6,7 +6,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/eugene982/yp-gophkeeper/internal/handler"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,7 +23,7 @@ func TestPing(t *testing.T) {
 			w := httptest.NewRecorder()
 			r := httptest.NewRequest("GET", "/ping", nil)
 
-			var pinger = handler.PingerFunc(func(context.Context) error {
+			var pinger = PingerFunc(func(context.Context) error {
 				if tcase.wantStatus == 200 {
 					return nil
 				} else {

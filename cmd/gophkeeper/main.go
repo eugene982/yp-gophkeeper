@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/eugene982/yp-gophkeeper/internal/application"
 	"github.com/eugene982/yp-gophkeeper/internal/config"
 	"github.com/eugene982/yp-gophkeeper/internal/logger"
 )
@@ -41,5 +42,11 @@ func run() (err error) {
 		"date", buildDate,
 		"commit", buildCommit)
 
-	return nil
+	app, err := application.New(config)
+	if err != nil {
+		return
+	}
+	logger.Info("application start", "config", config)
+
+	return app.Start()
 }
