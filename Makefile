@@ -1,4 +1,4 @@
-BUILD_VERSION="v1.25.3"
+BUILD_VERSION="v0.0.1"
 BUILD_DATE=$(shell date +"%Y/%m/%d %H:%M")
 BUILD_COMMIT=$(shell git rev-parse HEAD)
 
@@ -9,7 +9,7 @@ BIN_PATH=./bin/gophkeeper
 gofmt:
 	gofmt -s -l . 	
 
-tests:
+test:
 	go test -race ./...
 
 vet:
@@ -24,16 +24,13 @@ codecov:
 golangci-lint:
 	golangci-lint run ./...	
 
-buildlint:
-	go build -o=bin/staticlint cmd/staticlint/main.go 
-
-runsrv:
+run:
 	go run -ldflags \
 		"-X main.buildVersion=$(BUILD_VERSION) -X 'main.buildDate=$(BUILD_DATE)' -X 'main.buildCommit=$(BUILD_COMMIT)' "\
-		cmd/shortener/*.go
+		cmd/gophkeeper/*.go
 
 buildsrv: tests staticcheck vet
 	go build -o $(BIN_PATH) \
 		-ldflags \
 		"-X main.buildVersion=$(BUILD_VERSION) -X 'main.buildDate=$(BUILD_DATE)' -X 'main.buildCommit="$(BUILD_COMMIT)"' "\
-		cmd/shortener/*.go
+		cmd/gophkeeper/*.go
