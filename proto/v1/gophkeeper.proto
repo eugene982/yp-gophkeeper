@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 import "google/protobuf/empty.proto";
-//import "buf/validate/validate.proto";
+import "buf/validate/validate.proto";
 
 package gophermart.v1;
 
@@ -10,6 +10,9 @@ option go_package = "github.com/eugene982/yp-gophermart/proto";
 service GophKeeper {
     // Ping проверка соединения
     rpc Ping(google.protobuf.Empty) returns (PingResponse);
+
+    // Register регистрация нового пользователя
+    rpc Register(RegisterRequest) returns (RegisterResponse);
 }
 
 // Ping
@@ -17,3 +20,12 @@ message PingResponse {
     string message = 1;
 }
 
+// Register
+message RegisterRequest {
+    string login = 1[(buf.validate.field).string.min_len = 1];
+    string password = 2;
+}
+
+message RegisterResponse {
+    string token = 1;
+}

@@ -32,10 +32,21 @@ func (app *Application) Start() error {
 }
 
 func (app *Application) Ping(ctx context.Context) error {
+	// заглушка
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
 	default:
 		return nil
+	}
+}
+
+func (app *Application) Register(ctx context.Context, login, password string) (string, error) {
+	// заглушка
+	select {
+	case <-ctx.Done():
+		return "", ctx.Err()
+	default:
+		return "secret-token", nil
 	}
 }

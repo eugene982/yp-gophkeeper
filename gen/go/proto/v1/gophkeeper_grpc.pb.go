@@ -20,7 +20,8 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	GophKeeper_Ping_FullMethodName = "/gophermart.v1.GophKeeper/Ping"
+	GophKeeper_Ping_FullMethodName     = "/gophermart.v1.GophKeeper/Ping"
+	GophKeeper_Register_FullMethodName = "/gophermart.v1.GophKeeper/Register"
 )
 
 // GophKeeperClient is the client API for GophKeeper service.
@@ -29,6 +30,8 @@ const (
 type GophKeeperClient interface {
 	// Ping проверка соединения
 	Ping(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*PingResponse, error)
+	// Register регистрация нового пользователя
+	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
 }
 
 type gophKeeperClient struct {
@@ -48,12 +51,23 @@ func (c *gophKeeperClient) Ping(ctx context.Context, in *empty.Empty, opts ...gr
 	return out, nil
 }
 
+func (c *gophKeeperClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error) {
+	out := new(RegisterResponse)
+	err := c.cc.Invoke(ctx, GophKeeper_Register_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GophKeeperServer is the server API for GophKeeper service.
 // All implementations must embed UnimplementedGophKeeperServer
 // for forward compatibility
 type GophKeeperServer interface {
 	// Ping проверка соединения
 	Ping(context.Context, *empty.Empty) (*PingResponse, error)
+	// Register регистрация нового пользователя
+	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
 	mustEmbedUnimplementedGophKeeperServer()
 }
 
@@ -63,6 +77,9 @@ type UnimplementedGophKeeperServer struct {
 
 func (UnimplementedGophKeeperServer) Ping(context.Context, *empty.Empty) (*PingResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
+}
+func (UnimplementedGophKeeperServer) Register(context.Context, *RegisterRequest) (*RegisterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
 func (UnimplementedGophKeeperServer) mustEmbedUnimplementedGophKeeperServer() {}
 
@@ -95,6 +112,24 @@ func _GophKeeper_Ping_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GophKeeper_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GophKeeperServer).Register(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GophKeeper_Register_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GophKeeperServer).Register(ctx, req.(*RegisterRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GophKeeper_ServiceDesc is the grpc.ServiceDesc for GophKeeper service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -105,6 +140,10 @@ var GophKeeper_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Ping",
 			Handler:    _GophKeeper_Ping_Handler,
+		},
+		{
+			MethodName: "Register",
+			Handler:    _GophKeeper_Register_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

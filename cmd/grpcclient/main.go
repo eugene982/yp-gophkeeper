@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	pb "github.com/eugene982/yp-gophkeeper/gen/go/proto/v1"
+	"github.com/golang/protobuf/ptypes/empty"
 )
 
 const (
@@ -38,7 +40,13 @@ func run() error {
 
 	_, err = Ping(c)
 	if err != nil {
-		return err
+		return fmt.Errorf("ping error: %w", err)
+	}
+
+	// ***
+	err = Register(c, "", "")
+	if err != nil {
+		return fmt.Errorf("register error: %w", err)
 	}
 
 	return nil
@@ -55,16 +63,26 @@ func clientInterceptor(ctx context.Context, method string, req, reply interface{
 
 	// выводим действия после вызова метода
 	if err != nil {
-		log.Printf("[ERROR] %s,%v", method, err)
+		log.Printf("[ERROR]: %s, %v", method, err)
 	} else {
-		log.Printf("[INFO], %s,%v", method, time.Since(start))
+		log.Printf("[INFO]: %v, %s, %v", time.Since(start), method, reply)
 	}
 	return err
 }
 
 func Ping(c pb.GophKeeperClient) (string, error) {
-	ctx, candel := context.WithTimeout(context.Background(), requestTimeout)
-	defer candel()
-	resp, err := c.Ping(ctx, nil)
-	return resp.Message, err
+	resp, err := c.Ping(context.Background(), &empty.Empty{})
+	if err != nil {
+		return "", err
+	}
+	return resp.Message, nil
+}
+
+func Register(c pb.GophKeeperClient, login, passwd string) error {
+	req := pb.RegisterRequest{
+		Login:    login,
+		Password: passwd,
+	}
+	_, err := c.Register(context.Background(), &req)
+	return err
 }
