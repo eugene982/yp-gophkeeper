@@ -19,7 +19,7 @@ func Parse() (Config, error) {
 	var config Config
 
 	// читаем флаги
-	flag.StringVar(&config.ServerAddres, "a", ":8080", "server address")
+	flag.StringVar(&config.ServerAddres, "a", ":28000", "server address")
 	flag.DurationVar(&config.Timeout, "t", 30, "timeout in seconds")
 	flag.StringVar(&config.LogLevel, "l", "info", "log level")
 	flag.Parse()

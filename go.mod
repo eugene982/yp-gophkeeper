@@ -25,6 +25,7 @@ require (
 require (
 	github.com/bufbuild/protovalidate-go v0.3.3
 	github.com/caarlos0/env/v8 v8.0.0
+	github.com/golang-jwt/jwt/v4 v4.5.0
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.0.1
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/multierr v1.10.0 // indirect

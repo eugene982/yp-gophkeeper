@@ -22,6 +22,8 @@ const _ = grpc.SupportPackageIsVersion7
 const (
 	GophKeeper_Ping_FullMethodName     = "/gophermart.v1.GophKeeper/Ping"
 	GophKeeper_Register_FullMethodName = "/gophermart.v1.GophKeeper/Register"
+	GophKeeper_Login_FullMethodName    = "/gophermart.v1.GophKeeper/Login"
+	GophKeeper_List_FullMethodName     = "/gophermart.v1.GophKeeper/List"
 )
 
 // GophKeeperClient is the client API for GophKeeper service.
@@ -32,6 +34,10 @@ type GophKeeperClient interface {
 	Ping(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*PingResponse, error)
 	// Register регистрация нового пользователя
 	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*RegisterResponse, error)
+	// Login регистрация нового пользователя
+	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
+	// List возвращает количество хранимых данных пользователя (защищённый)
+	List(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListResponse, error)
 }
 
 type gophKeeperClient struct {
@@ -60,6 +66,24 @@ func (c *gophKeeperClient) Register(ctx context.Context, in *RegisterRequest, op
 	return out, nil
 }
 
+func (c *gophKeeperClient) Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error) {
+	out := new(LoginResponse)
+	err := c.cc.Invoke(ctx, GophKeeper_Login_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gophKeeperClient) List(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListResponse, error) {
+	out := new(ListResponse)
+	err := c.cc.Invoke(ctx, GophKeeper_List_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GophKeeperServer is the server API for GophKeeper service.
 // All implementations must embed UnimplementedGophKeeperServer
 // for forward compatibility
@@ -68,6 +92,10 @@ type GophKeeperServer interface {
 	Ping(context.Context, *empty.Empty) (*PingResponse, error)
 	// Register регистрация нового пользователя
 	Register(context.Context, *RegisterRequest) (*RegisterResponse, error)
+	// Login регистрация нового пользователя
+	Login(context.Context, *LoginRequest) (*LoginResponse, error)
+	// List возвращает количество хранимых данных пользователя (защищённый)
+	List(context.Context, *empty.Empty) (*ListResponse, error)
 	mustEmbedUnimplementedGophKeeperServer()
 }
 
@@ -80,6 +108,12 @@ func (UnimplementedGophKeeperServer) Ping(context.Context, *empty.Empty) (*PingR
 }
 func (UnimplementedGophKeeperServer) Register(context.Context, *RegisterRequest) (*RegisterResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
+}
+func (UnimplementedGophKeeperServer) Login(context.Context, *LoginRequest) (*LoginResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
+}
+func (UnimplementedGophKeeperServer) List(context.Context, *empty.Empty) (*ListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
 }
 func (UnimplementedGophKeeperServer) mustEmbedUnimplementedGophKeeperServer() {}
 
@@ -130,6 +164,42 @@ func _GophKeeper_Register_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GophKeeper_Login_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(LoginRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GophKeeperServer).Login(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GophKeeper_Login_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GophKeeperServer).Login(ctx, req.(*LoginRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GophKeeper_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GophKeeperServer).List(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GophKeeper_List_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GophKeeperServer).List(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GophKeeper_ServiceDesc is the grpc.ServiceDesc for GophKeeper service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -144,6 +214,14 @@ var GophKeeper_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Register",
 			Handler:    _GophKeeper_Register_Handler,
+		},
+		{
+			MethodName: "Login",
+			Handler:    _GophKeeper_Login_Handler,
+		},
+		{
+			MethodName: "List",
+			Handler:    _GophKeeper_List_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

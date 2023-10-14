@@ -13,6 +13,12 @@ service GophKeeper {
 
     // Register регистрация нового пользователя
     rpc Register(RegisterRequest) returns (RegisterResponse);
+
+    // Login регистрация нового пользователя
+    rpc Login(LoginRequest) returns (LoginResponse);
+
+    // List возвращает количество хранимых данных пользователя (защищённый)
+    rpc List(google.protobuf.Empty) returns (ListResponse); 
 }
 
 // Ping
@@ -28,4 +34,21 @@ message RegisterRequest {
 
 message RegisterResponse {
     string token = 1;
+}
+
+// Login 
+message LoginRequest {
+    string login = 1[(buf.validate.field).string.min_len = 1];
+    string password = 2;    
+}
+
+message LoginResponse {
+    string token = 1;    
+}
+
+// List 
+message ListResponse {
+    int32 password_count = 1; // количество хранимых пользователем паролей
+    int32 note_count = 2;     // количество заметок
+    int32 cards_count = 3;    // количество кредитных карт
 }

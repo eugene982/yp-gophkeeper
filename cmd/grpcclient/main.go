@@ -2,23 +2,42 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
+	"io"
 	"log"
+	"os"
 	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 
 	pb "github.com/eugene982/yp-gophkeeper/gen/go/proto/v1"
 	"github.com/golang/protobuf/ptypes/empty"
 )
 
-const (
-	addr           = ":8080"
-	requestTimeout = time.Second * 10
+var (
+	debugMode bool
+	userName  string // имя пользователя
+	userToken string // токен пользователя
+	srvAddr   string // адрес сервера
+	client    pb.GophKeeperClient
+
+	// обработчики комманд
+	handlers = map[string](func() error){
+		"help": helpCmd,
+		"ping": pingCmd,
+		"reg":  regCmd,
+		"ls":   lsCmd,
+	}
 )
 
 func main() {
+
+	flag.StringVar(&srvAddr, "a", ":28000", "gophkeeper server address")
+	flag.BoolVar(&debugMode, "debug", true, "debug mode")
+
 	err := run()
 	if err != nil {
 		log.Fatal(err)
@@ -27,8 +46,8 @@ func main() {
 
 func run() error {
 	// устанавливаем соединение с сервером
-	conn, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithUnaryInterceptor(clientInterceptor))
+	conn, err := grpc.Dial(srvAddr, grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithUnaryInterceptor(echoInterceptor))
 	if err != nil {
 		return err
 	}
@@ -36,53 +55,138 @@ func run() error {
 
 	// Получаем переменную интерфейсного типа UserClient,
 	// через которую будем отправлять сообщения
-	c := pb.NewGophKeeperClient(conn)
+	client = pb.NewGophKeeperClient(conn)
 
-	_, err = Ping(c)
-	if err != nil {
-		return fmt.Errorf("ping error: %w", err)
+	var (
+		cmd string = "help"
+	)
+
+	for mainLop(cmd) {
+		prompt()
+
+		_, err := fmt.Scanln(&cmd)
+		if err != nil {
+			log.Println("fmt.Scanln err:", err)
+			if err == io.EOF {
+				return nil
+			}
+			fmt.Fprintln(os.Stderr, "wrong command")
+			cmd = "help"
+			continue
+		}
+
 	}
-
-	// ***
-	err = Register(c, "", "")
-	if err != nil {
-		return fmt.Errorf("register error: %w", err)
-	}
-
 	return nil
 }
 
-func clientInterceptor(ctx context.Context, method string, req, reply interface{},
+func mainLop(cmd string) bool {
+	if cmd == "q" || cmd == "quit" || cmd == "exit" {
+		return false
+	} else if cmd == "" {
+		return true
+	}
+
+	fn, ok := handlers[cmd]
+	if !ok {
+		fmt.Fprintln(os.Stderr, "wrong command")
+		helpCmd()
+		return true
+	}
+
+	err := fn()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+	}
+
+	return true
+}
+
+func prompt() {
+	if userName == "" {
+		fmt.Printf("%s>", srvAddr)
+	} else {
+		fmt.Printf("%s@%s>", userName, srvAddr)
+	}
+}
+
+func helpCmd() error {
+	fmt.Println(
+		`for help print "help"
+print "q" or "quit" to quit"
+for ping server print "ping"
+for register new user print "reg"`)
+	return nil
+}
+
+func pingCmd() error {
+	resp, err := client.Ping(context.Background(), &empty.Empty{})
+	if err != nil {
+		return err
+	}
+	fmt.Println(resp.Message)
+	return nil
+}
+
+func regCmd() error {
+	var login, passwd string
+
+	fmt.Print("\tlogin:")
+	_, err := fmt.Scanln(&login)
+	if err != nil {
+		return err
+	}
+
+	fmt.Print("\tpassword:")
+	_, err = fmt.Scanln(&passwd)
+	if err != nil {
+		return err
+	}
+
+	req := pb.RegisterRequest{
+		Login:    login,
+		Password: passwd,
+	}
+	resp, err := client.Register(context.Background(), &req)
+	if err != nil {
+		return err
+	}
+	userToken = resp.Token
+	userName = login
+	fmt.Println("OK")
+	return nil
+}
+
+func lsCmd() error {
+	return fmt.Errorf("not implements")
+}
+
+func withToken(ctx context.Context) context.Context {
+	md := metadata.New(map[string]string{
+		"token": userToken,
+	})
+	return metadata.NewOutgoingContext(ctx, md)
+}
+
+func echoInterceptor(ctx context.Context, method string, req, reply interface{},
 	cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
+
+	if !debugMode {
+		return invoker(ctx, method, req, reply, cc, opts...)
+	}
 
 	// выполняем действия перед вызовом метода
 	start := time.Now()
+
+	log.Printf("[REQ]: %v, %s, %v", start, method, req)
 
 	// вызов RPC-метод
 	err := invoker(ctx, method, req, reply, cc, opts...)
 
 	// выводим действия после вызова метода
 	if err != nil {
-		log.Printf("[ERROR]: %s, %v", method, err)
+		log.Printf("[ERROR]: %s", err)
 	} else {
-		log.Printf("[INFO]: %v, %s, %v", time.Since(start), method, reply)
+		log.Printf("[RESP]: %v, %v", time.Since(start), reply)
 	}
-	return err
-}
-
-func Ping(c pb.GophKeeperClient) (string, error) {
-	resp, err := c.Ping(context.Background(), &empty.Empty{})
-	if err != nil {
-		return "", err
-	}
-	return resp.Message, nil
-}
-
-func Register(c pb.GophKeeperClient, login, passwd string) error {
-	req := pb.RegisterRequest{
-		Login:    login,
-		Password: passwd,
-	}
-	_, err := c.Register(context.Background(), &req)
 	return err
 }

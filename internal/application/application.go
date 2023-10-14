@@ -2,9 +2,11 @@ package application
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/eugene982/yp-gophkeeper/internal/config"
 	"github.com/eugene982/yp-gophkeeper/internal/grpc"
+	"github.com/eugene982/yp-gophkeeper/internal/utils"
 )
 
 type Application struct {
@@ -26,11 +28,12 @@ func New(conf config.Config) (*Application, error) {
 	return &app, nil
 }
 
-// запуск прослушивания
+// Start запуск прослушивания
 func (app *Application) Start() error {
 	return app.grpcServer.Start()
 }
 
+// Ping проверка соединения
 func (app *Application) Ping(ctx context.Context) error {
 	// заглушка
 	select {
@@ -41,12 +44,26 @@ func (app *Application) Ping(ctx context.Context) error {
 	}
 }
 
+// Register регистрация пользователя
 func (app *Application) Register(ctx context.Context, login, password string) (string, error) {
-	// заглушка
 	select {
 	case <-ctx.Done():
 		return "", ctx.Err()
 	default:
-		return "secret-token", nil
+	}
+
+	token, err := utils.BuildJWTString(login, grpc.SECRET_KEY, grpc.TOKEN_EXP)
+	if err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+func (app *Application) Login(ctx context.Context, login, passwd string) (string, error) {
+	select {
+	case <-ctx.Done():
+		return "", ctx.Err()
+	default:
+		return "", fmt.Errorf("not implements")
 	}
 }

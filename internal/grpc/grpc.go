@@ -3,7 +3,6 @@ package grpc
 import (
 	"context"
 	"net"
-	"time"
 
 	"github.com/bufbuild/protovalidate-go"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -11,9 +10,17 @@ import (
 	"google.golang.org/grpc"
 
 	pb "github.com/eugene982/yp-gophkeeper/gen/go/proto/v1"
+	"github.com/eugene982/yp-gophkeeper/internal/handler/login"
 	"github.com/eugene982/yp-gophkeeper/internal/handler/ping"
 	"github.com/eugene982/yp-gophkeeper/internal/handler/register"
-	"github.com/eugene982/yp-gophkeeper/internal/logger"
+)
+
+// contextKeyType - тип ключей для контекста
+type contextKeyType uint
+
+// Доступные ключи для контекста
+const (
+	contextKeyUserID contextKeyType = iota
 )
 
 type ServerLogic interface {
@@ -28,8 +35,9 @@ type GRPCServer struct {
 	server *grpc.Server
 
 	// handlers
-	pingHandler ping.GRPCHahdler
-	regHandler  register.GRPCHandler
+	pingHandler  ping.GRPCHahdler
+	regHandler   register.GRPCHandler
+	loginHandler login.GRPCHandler
 }
 
 func NewServer(logic ServerLogic, addr string) (*GRPCServer, error) {
@@ -56,6 +64,7 @@ func NewServer(logic ServerLogic, addr string) (*GRPCServer, error) {
 	srv.server = grpc.NewServer(grpc.ChainUnaryInterceptor(
 		loggerInterceptor,
 		protovalidate_middleware.UnaryServerInterceptor(validator),
+		newAuthInterceptor("Ping"),
 	))
 
 	// Подключаем ручки
@@ -72,29 +81,6 @@ func (s *GRPCServer) Start() error {
 	return s.server.Serve(s.listen)
 }
 
-// loggerInterceptor прослойка логирования запросов
-func loggerInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
-	start := time.Now()
-
-	logger.Info("request",
-		"method", info.FullMethod)
-
-	logger.Debug("incoming",
-		"request", req)
-
-	resp, err = handler(ctx, req)
-
-	logger.Info("request",
-		"duration", time.Since(start),
-		"ok", err == nil)
-
-	logger.Debug("outgoing",
-		"response", resp,
-		"error", err)
-
-	return
-}
-
 func (s GRPCServer) Ping(ctx context.Context, in *empty.Empty) (*pb.PingResponse, error) {
 	if s.pingHandler == nil {
 		return s.UnimplementedGophKeeperServer.Ping(ctx, in)
@@ -108,3 +94,14 @@ func (s GRPCServer) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.R
 	}
 	return s.regHandler(ctx, in)
 }
+
+func (s GRPCServer) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginResponse, error) {
+	if s.loginHandler == nil {
+		return s.UnimplementedGophKeeperServer.Login(ctx, in)
+	}
+	return s.loginHandler(ctx, in)
+}
+
+// func (s GRPCServer) List(ctx context.Context, in *empty.Empty) (*pb.ListResponse, error) {
+// 	return s.UnimplementedGophKeeperServer.List(ctx, in)
+// }
