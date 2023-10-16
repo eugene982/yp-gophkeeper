@@ -1,4 +1,4 @@
-package utils
+package jwt
 
 import (
 	"fmt"
@@ -9,15 +9,15 @@ import (
 
 // Claims - структура утверждений, которая включает стандартные утверждения
 // и одно пользовательское UserID
-type Claims struct {
+type claims struct {
 	jwt.RegisteredClaims
 	UserID string
 }
 
-// BuildJWTString cоздаёт токен и возвращает его в виде строки.
-func BuildJWTString(userID string, secret_key string, exp time.Duration) (string, error) {
+// MakeToken cоздаёт токен и возвращает его в виде строки.
+func MakeToken(userID string, secret_key string, exp time.Duration) (string, error) {
 	// создаём новый токен с алгоритмом подписи HS256 и утверждением - Claims
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, Claims{
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			// когда создан токен
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(exp)),
@@ -34,12 +34,12 @@ func BuildJWTString(userID string, secret_key string, exp time.Duration) (string
 	return tokenString, nil
 }
 
-// GetJWTUserID возвращает идентификатор пользователя
-func GetJWTUserID(tokenString, secret_key string) (string, error) {
+// GetUserID возвращает идентификатор пользователя
+func GetUserID(token, secret_key string) (string, error) {
 	// создаём экземпляр утверждения
-	claims := &Claims{}
+	claims := &claims{}
 	// парсим из строки токена tokenString в структуру
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
+	jwtoken, err := jwt.ParseWithClaims(token, claims, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok { // Проверка на совпадения метода подписи
 			return nil, fmt.Errorf("unexpected signed method: %v", t.Header["alg"])
 		}
@@ -51,7 +51,7 @@ func GetJWTUserID(tokenString, secret_key string) (string, error) {
 		return "", nil
 	}
 
-	if !token.Valid {
+	if !jwtoken.Valid {
 		return "", fmt.Errorf("invalid token")
 	}
 	// возвращаем ID полезователя

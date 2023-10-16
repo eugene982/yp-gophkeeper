@@ -4,8 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/eugene982/yp-gophkeeper/internal/logger"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
+
+	"github.com/eugene982/yp-gophkeeper/internal/logger"
 )
 
 // loggerInterceptor прослойка логирования запросов
@@ -15,12 +17,15 @@ func loggerInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo,
 	logger.Info("request",
 		"method", info.FullMethod)
 
+	md, _ := metadata.FromIncomingContext(ctx)
+
 	logger.Debug("incoming",
-		"request", req)
+		"request", req,
+		"metadata", md)
 
 	resp, err = handler(ctx, req)
 
-	logger.Info("request",
+	logger.Info("response",
 		"duration", time.Since(start),
 		"ok", err == nil)
 

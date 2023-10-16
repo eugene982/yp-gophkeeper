@@ -48,7 +48,7 @@ message LoginResponse {
 
 // List 
 message ListResponse {
-    int32 password_count = 1; // количество хранимых пользователем паролей
-    int32 note_count = 2;     // количество заметок
+    int32 passwords_count = 1; // количество хранимых пользователем паролей
+    int32 notes_count = 2;     // количество заметок
     int32 cards_count = 3;    // количество кредитных карт
 }

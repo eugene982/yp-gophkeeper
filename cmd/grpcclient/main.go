@@ -30,6 +30,7 @@ var (
 		"ping": pingCmd,
 		"reg":  regCmd,
 		"ls":   lsCmd,
+		"list": lsCmd,
 	}
 )
 
@@ -157,7 +158,17 @@ func regCmd() error {
 }
 
 func lsCmd() error {
-	return fmt.Errorf("not implements")
+
+	ctx := withToken(context.Background())
+	resp, err := client.List(ctx, &empty.Empty{})
+	if err != nil {
+		return nil
+	}
+
+	fmt.Printf("\tPasswords: %d\n\tNotes: %d\n\tCards: %d\n",
+		resp.PasswordsCount, resp.NotesCount, resp.CardsCount)
+
+	return nil
 }
 
 func withToken(ctx context.Context) context.Context {

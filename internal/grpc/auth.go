@@ -1,75 +1,61 @@
 package grpc
 
-import (
-	"context"
-	"fmt"
-	"sort"
-	"strings"
-	"time"
+// const (
+// 	TOKEN_EXP  = time.Hour * 3
+// 	SECRET_KEY = "supersecretkey"
+// )
 
-	"github.com/eugene982/yp-gophkeeper/internal/utils"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
-	"google.golang.org/grpc/status"
-)
+// var (
+// 	errMissingMetadata = status.Errorf(codes.InvalidArgument, "missing metadata")
+// 	errInvalidToken    = status.Errorf(codes.Unauthenticated, "invalid token")
+// )
 
-const (
-	TOKEN_EXP  = time.Hour * 3
-	SECRET_KEY = "supersecretkey"
-)
+// // SetUserID устанавливает идентификатор пользователя в контекст запроса
+// func SetUserID(ctx context.Context, userID string) context.Context {
+// 	return context.WithValue(ctx, contextKeyUserID, userID)
+// }
 
-var (
-	errMissingMetadata = status.Errorf(codes.InvalidArgument, "missing metadata")
-	errInvalidToken    = status.Errorf(codes.Unauthenticated, "invalid token")
-)
+// // GetUserID Возвращает идентификатор пользователя из контекста
+// func GetUserID(ctx context.Context) (string, error) {
+// 	val := ctx.Value(contextKeyUserID)
+// 	if val == nil {
+// 		return "", fmt.Errorf("user id not found")
+// 	}
+// 	userID, ok := val.(string)
+// 	if !ok {
+// 		return "", fmt.Errorf("user id is not uint type")
+// 	}
+// 	return userID, nil
+// }
 
-// SetUserID устанавливает идентификатор пользователя в контекст запроса
-func SetUserID(ctx context.Context, userID string) context.Context {
-	return context.WithValue(ctx, contextKeyUserID, userID)
-}
+// func newAuthInterceptor(handlers ...string) grpc.UnaryServerInterceptor {
 
-// GetUserID Возвращает идентификатор пользователя из контекста
-func GetUserID(ctx context.Context) (string, error) {
-	val := ctx.Value(contextKeyUserID)
-	if val == nil {
-		return "", fmt.Errorf("user id not found")
-	}
-	userID, ok := val.(string)
-	if !ok {
-		return "", fmt.Errorf("user id is not uint type")
-	}
-	return userID, nil
-}
+// 	handlersSlice := sort.StringSlice(handlers)
+// 	handlersSlice.Sort()
 
-func newAuthInterceptor(handlers ...string) grpc.UnaryServerInterceptor {
+// 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
 
-	handlersSlice := sort.StringSlice(handlers)
-	handlersSlice.Sort()
+// 		method, ok := strings.CutSuffix(info.FullMethod, "/")
+// 		if !ok || handlersSlice.Search(method) == -1 {
+// 			return handler(ctx, req)
+// 		}
 
-	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp any, err error) {
+// 		var token string
+// 		if md, ok := metadata.FromIncomingContext(ctx); !ok {
+// 			return nil, errMissingMetadata
+// 		} else if vals := md.Get("token"); len(vals) > 1 {
+// 			token = vals[0]
+// 		} else {
+// 			return nil, errInvalidToken
+// 		}
 
-		method, ok := strings.CutSuffix(info.FullMethod, "/")
-		if !ok || handlersSlice.Search(method) == -1 {
-			return handler(ctx, req)
-		}
+// 		userID, err := jwt.GetUserID(token, SECRET_KEY)
+// 		if err != nil {
+// 			return nil, errInvalidToken
+// 		}
 
-		var token string
-		if md, ok := metadata.FromIncomingContext(ctx); !ok {
-			return nil, errMissingMetadata
-		} else if vals := md.Get("token"); len(vals) > 1 {
-			token = vals[0]
-		} else {
-			return nil, errInvalidToken
-		}
-
-		userID, err := utils.GetJWTUserID(token, SECRET_KEY)
-		if err != nil {
-			return nil, errInvalidToken
-		}
-
-		// помещаем идентификатор пользователя в контекст и выполняем с ним метод
-		uctx := SetUserID(ctx, userID)
-		return handler(uctx, req)
-	}
-}
+// 		// помещаем идентификатор пользователя в контекст и выполняем с ним метод
+// 		uctx := SetUserID(ctx, userID)
+// 		return handler(uctx, req)
+// 	}
+// }
