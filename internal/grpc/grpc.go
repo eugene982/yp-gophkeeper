@@ -13,6 +13,7 @@ import (
 	"github.com/eugene982/yp-gophkeeper/internal/handler"
 	"github.com/eugene982/yp-gophkeeper/internal/handler/list"
 	"github.com/eugene982/yp-gophkeeper/internal/handler/login"
+	"github.com/eugene982/yp-gophkeeper/internal/handler/password"
 	"github.com/eugene982/yp-gophkeeper/internal/handler/ping"
 	"github.com/eugene982/yp-gophkeeper/internal/handler/register"
 )
@@ -21,6 +22,9 @@ type ServerLogic interface {
 	ping.Pinger
 	register.Register
 	list.ListGetter
+	login.Login
+
+	password.PasswordManadger
 }
 
 // List implements list.List.
@@ -36,6 +40,9 @@ type GRPCServer struct {
 	regHandler   register.GRPCHandler
 	loginHandler login.GRPCHandler
 	listHandler  list.GRPCHandler
+
+	// password
+	passwdListHandler password.GRPCListHandler
 }
 
 func NewServer(logic ServerLogic, addr, sekret_key string) (*GRPCServer, error) {
@@ -64,10 +71,15 @@ func NewServer(logic ServerLogic, addr, sekret_key string) (*GRPCServer, error) 
 		protovalidate_middleware.UnaryServerInterceptor(validator),
 	))
 
+	userIDGetter := handler.NewMDUserIDGetter(sekret_key)
+
 	// Подключаем ручки
 	srv.pingHandler = ping.NewRPCPingHandler(logic)
 	srv.regHandler = register.NewRPCRegisterHandler(logic)
-	srv.listHandler = list.NewRPCListHandler(logic, handler.NewMDUserIDGetter(sekret_key))
+	srv.listHandler = list.NewRPCListHandler(logic, userIDGetter)
+	srv.loginHandler = login.NewRPCLoginHandler(logic)
+
+	// Password
 
 	// регистрируем сервис
 	pb.RegisterGophKeeperServer(srv.server, srv)
@@ -105,4 +117,23 @@ func (s GRPCServer) List(ctx context.Context, in *empty.Empty) (*pb.ListResponse
 		return s.UnimplementedGophKeeperServer.List(ctx, in)
 	}
 	return s.listHandler(ctx, in)
+}
+
+func (s GRPCServer) PasswordList(ctx context.Context, in *empty.Empty) (*pb.PasswordListResponse, error) {
+	if s.passwdListHandler != nil {
+		return s.passwdListHandler(ctx, in)
+	}
+	return s.UnimplementedGophKeeperServer.PasswordList(ctx, in)
+}
+func (s GRPCServer) PasswordWrite(ctx context.Context, in *pb.PasswordWriteRequest) (*empty.Empty, error) {
+	return s.UnimplementedGophKeeperServer.PasswordWrite(ctx, in)
+}
+func (s GRPCServer) PasswordUpdate(ctx context.Context, in *pb.PasswordWriteRequest) (*empty.Empty, error) {
+	return s.UnimplementedGophKeeperServer.PasswordUpdate(ctx, in)
+}
+func (s GRPCServer) PasswordRead(ctx context.Context, in *pb.PasswordReadRequest) (*empty.Empty, error) {
+	return s.UnimplementedGophKeeperServer.PasswordRead(ctx, in)
+}
+func (s GRPCServer) PasswordDelete(ctx context.Context, in *pb.PasswordReadRequest) (*empty.Empty, error) {
+	return s.UnimplementedGophKeeperServer.PasswordDelete(ctx, in)
 }

@@ -59,4 +59,12 @@ type Storage interface {
 	Ping(context.Context) error
 	WriteUser(context.Context, UserData) error
 	ReadUser(context.Context, string) (UserData, error)
+	ReadList(context.Context, string) (ListData, error)
+
+	//Password
+	PasswordList(context.Context, string) ([]string, error)
+	PasswordWrite(context.Context, PasswordData) error
+	PasswordRead(context.Context, string, string) (PasswordData, error)
+	PasswordUpdate(context.Context, PasswordData) error
+	PasswordDelete(context.Context, string, string) error
 }

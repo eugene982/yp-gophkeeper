@@ -10,7 +10,17 @@ type UserData struct {
 // ListData структура хранилища содержащая информацию о количестве
 // хранимой информации по пользователю
 type ListData struct {
-	PasswordsCount int `db:"passwords_count"`
-	NotesCount     int `db:"notes_count"`
-	CardsCount     int `db:"cards_count"`
+	UserID         string `db:"user_id"`
+	NotesCount     int    `db:"notes_count"`
+	CardsCount     int    `db:"cards_count"`
+	PasswordsCount int    `db:"passwords_count"`
+}
+
+// PasswordData хранимая информация о паролях
+type PasswordData struct {
+	UserID   string `db:"user_id"`
+	Name     string `db:"name"`
+	Username string `db:"username"`
+	Password string `db:"password"`
+	Notes    string `db:"notes"`
 }

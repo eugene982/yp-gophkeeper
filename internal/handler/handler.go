@@ -4,18 +4,18 @@ import (
 	"context"
 	"errors"
 
-	"github.com/eugene982/yp-gophkeeper/internal/utils/jwt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+
+	"github.com/eugene982/yp-gophkeeper/internal/utils/jwt"
 )
 
 var (
 	ErrAlreadyExists   = errors.New("already exists")
 	ErrUnauthenticated = errors.New("unauthenticated")
 
-	errMissingMetadata = status.Errorf(codes.InvalidArgument, "missing metadata")
-	errInvalidToken    = status.Errorf(codes.Unauthenticated, "invalid token")
+	ErrRPCInvalidToken = status.Errorf(codes.Unauthenticated, "invalid token")
 )
 
 type UserIDGetter interface {
@@ -38,16 +38,16 @@ func GetUserIDFromMD(ctx context.Context, secret_key string) (string, error) {
 	var token string
 
 	if md, ok := metadata.FromIncomingContext(ctx); !ok {
-		return "", errMissingMetadata
-	} else if vals := md.Get("token"); len(vals) > 0 {
+		return "", ErrRPCInvalidToken
+	} else if vals := md.Get("token"); len(vals) > 0 && vals[0] != "" {
 		token = vals[0]
 	} else {
-		return "", errInvalidToken
+		return "", ErrRPCInvalidToken
 	}
 
 	userID, err := jwt.GetUserID(token, secret_key)
 	if err != nil {
-		return "", errInvalidToken
+		return "", ErrRPCInvalidToken
 	}
 	return userID, nil
 }

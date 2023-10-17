@@ -75,13 +75,90 @@ func (p *PgxStore) ReadUser(ctx context.Context, userID string) (res storage.Use
 	return
 }
 
+// читаем баланс пользователя
+func (p *PgxStore) ReadList(ctx context.Context, userID string) (res storage.ListData, err error) {
+	query := `
+	SELECT
+		users.user_id AS user_id,
+		COUNT(notes.name) AS notes_count,
+		COUNT(cards.name) AS cards_count,
+		COUNT(passwords.name) AS passwords_count
+	FROM users
+		LEFT JOIN notes ON users.user_id = notes.user_id
+		LEFT JOIN cards ON cards.user_id = notes.user_id
+		LEFT JOIN passwords ON users.user_id = passwords.user_id
+	WHERE 
+		users.user_id = $1
+	GROUP BY 
+		users.user_id;`
+
+	if err = p.db.GetContext(ctx, &res, query, userID); err != nil {
+		err = errNoContent(err)
+	}
+	return
+}
+
+func (p *PgxStore) PasswordList(context.Context, string) ([]string, error) {
+	panic("not implement")
+}
+
+func (p *PgxStore) PasswordWrite(context.Context, storage.PasswordData) error {
+	panic("not implement")
+}
+
+func (p *PgxStore) PasswordRead(context.Context, string, string) (storage.PasswordData, error) {
+	panic("not implement")
+}
+
+func (p *PgxStore) PasswordUpdate(context.Context, storage.PasswordData) error {
+	panic("not implement")
+}
+
+func (p *PgxStore) PasswordDelete(context.Context, string, string) error {
+	panic("not implement")
+}
+
 // При первом запуске база может быть пустая
 func createTablesIfNonExists(db *sqlx.DB) error {
 	query := `
 		CREATE TABLE IF NOT EXISTS users (
-			user_id VARCHAR (100) PRIMARY KEY,
-			passwd_hash TEXT NOT NULL
+			user_id     VARCHAR(64) PRIMARY KEY,
+			passwd_hash TEXT        NOT NULL
 		);
+
+		CREATE TABLE IF NOT EXISTS passwords (
+			user_id     VARCHAR(64)  NOT NULL,
+			name	    VARCHAR(128) NOT NULL,			
+			username    VARCHAR(128) NOT NULL,
+			password    VARCHAR(128) NOT NULL,
+			notes       TEXT         NOT NULL
+		);
+		CREATE INDEX IF NOT EXISTS user_id_idx 
+		ON passwords (user_id);
+		CREATE UNIQUE INDEX IF NOT EXISTS user_id_name_idx 
+		ON passwords (user_id, name);	
+
+
+		CREATE TABLE IF NOT EXISTS notes (
+			user_id VARCHAR(64)  NOT NULL,
+			name	VARCHAR(128) NOT NULL,
+			notes   TEXT         NOT NULL
+		);
+		CREATE INDEX IF NOT EXISTS user_id_idx 
+		ON notes (user_id);
+		CREATE UNIQUE INDEX IF NOT EXISTS user_id_name_idx 
+		ON notes (user_id, name);	
+		
+		CREATE TABLE IF NOT EXISTS cards (
+			user_id VARCHAR(64)  NOT NULL,
+			name	VARCHAR(128) NOT NULL,
+			number	VARCHAR(20)  NOT NULL,
+			notes   TEXT         NOT NULL
+		);
+		CREATE INDEX IF NOT EXISTS user_id_idx 
+		ON cards (user_id);
+		CREATE UNIQUE INDEX IF NOT EXISTS user_id_name_idx 
+		ON cards (user_id, name);		
 		`
 	_, err := db.Exec(query)
 	return err

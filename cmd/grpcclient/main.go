@@ -26,11 +26,12 @@ var (
 
 	// обработчики комманд
 	handlers = map[string](func() error){
-		"help": helpCmd,
-		"ping": pingCmd,
-		"reg":  regCmd,
-		"ls":   lsCmd,
-		"list": lsCmd,
+		"help":  helpCmd,
+		"ping":  pingCmd,
+		"reg":   regCmd,
+		"ls":    lsCmd,
+		"list":  lsCmd,
+		"login": loginCmd,
 	}
 )
 
@@ -111,11 +112,11 @@ func prompt() {
 }
 
 func helpCmd() error {
-	fmt.Println(
-		`for help print "help"
-print "q" or "quit" to quit"
-for ping server print "ping"
-for register new user print "reg"`)
+	fmt.Println(`	"help"       - вывод справки по командам 
+	"quit" ("q") - выход из программы"
+	"ping"       - проверка соединение (пинг)
+	"reg"        - регистрация (создание) нового пользователя
+	"login"      - вход`)
 	return nil
 }
 
@@ -153,7 +154,36 @@ func regCmd() error {
 	}
 	userToken = resp.Token
 	userName = login
-	fmt.Println("OK")
+	fmt.Println("\tOK")
+	return nil
+}
+
+func loginCmd() error {
+	var login, passwd string
+
+	fmt.Print("\tlogin:")
+	_, err := fmt.Scanln(&login)
+	if err != nil {
+		return err
+	}
+
+	fmt.Print("\tpassword:")
+	_, err = fmt.Scanln(&passwd)
+	if err != nil {
+		return err
+	}
+
+	req := pb.LoginRequest{
+		Login:    login,
+		Password: passwd,
+	}
+	resp, err := client.Login(context.Background(), &req)
+	if err != nil {
+		return err
+	}
+	userToken = resp.Token
+	userName = login
+	fmt.Println("\tOK")
 	return nil
 }
 
@@ -165,8 +195,9 @@ func lsCmd() error {
 		return nil
 	}
 
-	fmt.Printf("\tPasswords: %d\n\tNotes: %d\n\tCards: %d\n",
-		resp.PasswordsCount, resp.NotesCount, resp.CardsCount)
+	fmt.Println("\tNotes    :", resp.NotesCount)
+	fmt.Println("\tCards    :", resp.CardsCount)
+	fmt.Println("\tPasswords:", resp.PasswordsCount)
 
 	return nil
 }

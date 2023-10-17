@@ -76,12 +76,6 @@ func Errorf(format string, err error, a ...any) {
 	Error(fmt.Errorf(format, err), a...)
 }
 
-func IfErrorf(format string, err error, a ...any) {
-	if err != nil {
-		Error(fmt.Errorf(format, err), a...)
-	}
-}
-
 // вывод в стандартный лог
 func stdLogPrint(level string, msg any, v ...any) {
 	p := []any{level, msg}

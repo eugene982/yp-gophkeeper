@@ -3,7 +3,6 @@ package application
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/eugene982/yp-gophkeeper/internal/config"
@@ -60,7 +59,11 @@ func (app *Application) Ping(ctx context.Context) error {
 
 // Register регистрация пользователя
 func (app *Application) Register(ctx context.Context, login, password string) (token string, err error) {
-	defer logger.IfErrorf("register error", err)
+	defer func() { // залогируем ошибки при появлении
+		if err != nil && err != handler.ErrUnauthenticated {
+			logger.Errorf("register error: %w", err)
+		}
+	}()
 
 	hash, err := utils.PasswordHash(password, PASSWORD_SALT)
 	if err != nil {
@@ -78,11 +81,16 @@ func (app *Application) Register(ctx context.Context, login, password string) (t
 		return
 	}
 
-	return jwt.MakeToken(login, TOKEN_SECRET_KEY, TOKEN_EXP)
+	token, err = jwt.MakeToken(login, TOKEN_SECRET_KEY, TOKEN_EXP)
+	return
 }
 
 func (app *Application) Login(ctx context.Context, login, password string) (token string, err error) {
-	defer logger.IfErrorf("login error", err)
+	defer func() { // залогируем ошибки при появлении
+		if err != nil && err != handler.ErrUnauthenticated {
+			logger.Errorf("login error: %w", err)
+		}
+	}()
 
 	data, err := app.storage.ReadUser(ctx, login)
 	if err != nil {
@@ -97,14 +105,34 @@ func (app *Application) Login(ctx context.Context, login, password string) (toke
 		return
 	}
 
-	return jwt.MakeToken(login, TOKEN_SECRET_KEY, TOKEN_EXP)
+	token, err = jwt.MakeToken(login, TOKEN_SECRET_KEY, TOKEN_EXP)
+	return
 }
 
 func (app *Application) List(ctx context.Context, userID string) (storage.ListData, error) {
-	select {
-	case <-ctx.Done():
-		return storage.ListData{}, ctx.Err()
-	default:
-		return storage.ListData{}, fmt.Errorf("not implements")
+	res, err := app.storage.ReadList(ctx, userID)
+	if err != nil {
+		logger.Errorf("login error: %w", err)
 	}
+	return res, err
+}
+
+func (app *Application) PasswordList(context.Context, string) ([]string, error) {
+	panic("not implement")
+}
+
+func (app *Application) PasswordWrite(context.Context, storage.PasswordData) error {
+	panic("not implement")
+}
+
+func (app *Application) PasswordRead(context.Context, string, string) (storage.PasswordData, error) {
+	panic("not implement")
+}
+
+func (app *Application) PasswordUpdate(context.Context, storage.PasswordData) error {
+	panic("not implement")
+}
+
+func (app *Application) PasswordDelete(context.Context, string, string) error {
+	panic("not implement")
 }

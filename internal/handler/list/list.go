@@ -9,7 +9,6 @@ import (
 
 	pb "github.com/eugene982/yp-gophkeeper/gen/go/proto/v1"
 	"github.com/eugene982/yp-gophkeeper/internal/handler"
-	"github.com/eugene982/yp-gophkeeper/internal/logger"
 	"github.com/eugene982/yp-gophkeeper/internal/storage"
 )
 
@@ -38,7 +37,6 @@ func NewRPCListHandler(list ListGetter, ug handler.UserIDGetter) GRPCHandler {
 
 		data, err := list.List(ctx, userID)
 		if err != nil {
-			logger.Errorf("error rpc list handler: %w", err)
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
