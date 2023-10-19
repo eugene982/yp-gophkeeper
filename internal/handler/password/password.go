@@ -3,63 +3,98 @@ package password
 import (
 	"context"
 
-	pb "github.com/eugene982/yp-gophkeeper/gen/go/proto/v1"
-	"github.com/eugene982/yp-gophkeeper/internal/handler"
-	"github.com/eugene982/yp-gophkeeper/internal/storage"
 	"github.com/golang/protobuf/ptypes/empty"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+
+	pb "github.com/eugene982/yp-gophkeeper/gen/go/proto/v1"
+	"github.com/eugene982/yp-gophkeeper/internal/storage"
 )
 
-type PasswordManadger interface {
-	PasswordLister
-	PasswordWriter
-	PasswordReader
-	PasswordUpdater
-	PasswordDeleter
+type GRPCManadger interface {
+	PasswordList(ctx context.Context, in *empty.Empty) (*pb.PasswordListResponse, error)
+	PasswordWrite(ctx context.Context, in *pb.PasswordRequest) (*empty.Empty, error)
+	PasswordRead(ctx context.Context, in *pb.PasswordReadRequest) (*pb.PasswordResponse, error)
+	PasswordUpdate(ctx context.Context, in *pb.PasswordRequest) (*empty.Empty, error)
 }
 
-type PasswordLister interface {
-	PasswordList(context.Context, string) ([]string, error)
+type PasswordStorage interface {
+	//NamesList(ctx context.Context, tab storage.TableName, userID string) ([]string, error)
+	//Write(ctx context.Context, data any) error
+	Update(ctx context.Context, data any) error
+	ReadByName(ctx context.Context, tab storage.TableName, userID, name string) (any, error)
+	DeleteByName(ctx context.Context, tab storage.TableName, userID, name string) error
 }
 
-type PasswordWriter interface {
-	PasswordWrite(context.Context, storage.PasswordData) error
-}
+//func NewPasswordStore
 
-type PasswordReader interface {
-	PasswordRead(context.Context, string, string) (storage.PasswordData, error)
+type passwordManadger struct {
+	tabname storage.TableName
+	store   PasswordStorage
+	//userGetter handler.UserIDGetter
 }
-
-type PasswordUpdater interface {
-	PasswordUpdate(context.Context, storage.PasswordData) error
-}
-
-type PasswordDeleter interface {
-	PasswordDelete(context.Context, string, string) error
-}
-
-type GRPCListHandler func(context.Context, *empty.Empty) (*pb.PasswordListResponse, error)
-type GRPCWriteHandler func(context.Context, *pb.PasswordWriteRequest) (*empty.Empty, error)
-type GRPCUpdateHandler func(context.Context, *pb.PasswordWriteRequest) (*empty.Empty, error)
-type GRPReadHandler func(context.Context, *pb.PasswordReadRequest) (*empty.Empty, error)
-type GRPDeleteHandler func(context.Context, *pb.PasswordReadRequest) (*empty.Empty, error)
 
 // NewRPCListHandler - ручка возвращает список наименований паролей
-func NewRPCListHandler(ls PasswordLister, ug handler.UserIDGetter) GRPCListHandler {
-	return func(ctx context.Context, e *empty.Empty) (*pb.PasswordListResponse, error) {
-		var resp pb.PasswordListResponse
+// func NewGRPCPasswordManadger(s PasswordStorage, ug handler.UserIDGetter) GRPCManadger {
+// 	return passwordManadger{
+// 		tabname:    "passwords",
+// 		store:      s,
+// 		userGetter: ug,
+// 	}
+// }
 
-		userID, err := ug.GetUserID(ctx)
-		if err != nil {
-			return nil, err
-		}
+// PasswordWrite запись нового пароля
+// func (m passwordManadger) PasswordWrite(ctx context.Context, in *pb.PasswordRequest) (*empty.Empty, error) {
+// 	userID, err := m.userGetter.GetUserID(ctx)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-		resp.Names, err = ls.PasswordList(ctx, userID)
-		if err != nil {
-			return nil, status.Error(codes.Internal, err.Error())
-		}
+// 	err = m.store.Write(ctx, toPasswordData(userID, in))
+// 	if err != nil {
+// 		return nil, status.Error(codes.Internal, err.Error())
+// 	}
 
-		return &resp, nil
-	}
-}
+// 	return &empty.Empty{}, nil
+// }
+
+// func (m passwordManadger) PasswordRead(ctx context.Context, in *pb.PasswordReadRequest) (*pb.PasswordResponse, error) {
+// 	userID, err := m.userGetter.GetUserID(ctx)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	data, err := m.store.ReadByName(ctx, m.tabname, userID, in.Name)
+// 	if err != nil {
+// 		return nil, status.Error(codes.Internal, err.Error())
+// 	} else if res, ok := data.(storage.PasswordData); ok {
+// 		return &pb.PasswordResponse{
+// 			Name:     res.Name,
+// 			Username: res.Username,
+// 			Password: res.Password,
+// 			Notes:    res.Notes,
+// 		}, nil
+// 	}
+// 	return nil, status.Error(codes.Internal, "unknown data type")
+// }
+
+// // PasswordUpdate обновление пользовательского пароля
+// func (m passwordManadger) PasswordUpdate(ctx context.Context, in *pb.PasswordRequest) (*empty.Empty, error) {
+// 	userID, err := m.userGetter.GetUserID(ctx)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	if err = m.store.Update(ctx, toPasswordData(userID, in)); err != nil {
+// 		return nil, status.Error(codes.Internal, err.Error())
+// 	}
+// 	return &empty.Empty{}, nil
+// }
+
+// func toPasswordData(userID string, in *pb.PasswordRequest) storage.PasswordData {
+// 	return storage.PasswordData{
+// 		UserID:   userID,
+// 		Name:     in.Name,
+// 		Username: in.Username,
+// 		Password: in.Password,
+// 		Notes:    in.Notes,
+// 	}
+// }

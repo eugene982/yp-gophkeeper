@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"net"
+	"time"
 
 	"github.com/bufbuild/protovalidate-go"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -11,21 +12,30 @@ import (
 
 	pb "github.com/eugene982/yp-gophkeeper/gen/go/proto/v1"
 	"github.com/eugene982/yp-gophkeeper/internal/handler"
+	"github.com/eugene982/yp-gophkeeper/internal/handler/card"
 	"github.com/eugene982/yp-gophkeeper/internal/handler/list"
 	"github.com/eugene982/yp-gophkeeper/internal/handler/login"
+	"github.com/eugene982/yp-gophkeeper/internal/handler/note"
 	"github.com/eugene982/yp-gophkeeper/internal/handler/password"
 	"github.com/eugene982/yp-gophkeeper/internal/handler/ping"
 	"github.com/eugene982/yp-gophkeeper/internal/handler/register"
+	"github.com/eugene982/yp-gophkeeper/internal/storage"
 )
 
-type ServerLogic interface {
-	ping.Pinger
-	register.Register
-	list.ListGetter
-	login.Login
+var (
+	TOKEN_SECRET_KEY = "sekret=key"
+	TOKEN_EXP        = time.Hour
+	PASSWORD_SALT    = "password=salt"
+)
 
-	password.PasswordManadger
-}
+// type ServerLogic interface {
+// 	ping.Pinger
+// 	register.Register
+// 	list.ListGetter
+// 	login.Login
+
+// 	password.PasswordStorage
+// }
 
 // List implements list.List.
 
@@ -42,10 +52,16 @@ type GRPCServer struct {
 	listHandler  list.GRPCHandler
 
 	// password
-	passwdListHandler password.GRPCListHandler
+	paswordListHandler password.GRPCListHandler
+
+	// cards
+	cardListHandler card.GRPCListHandler
+
+	// notes
+	noteListHandler note.GRPCListHandler
 }
 
-func NewServer(logic ServerLogic, addr, sekret_key string) (*GRPCServer, error) {
+func NewServer(store storage.Storage, addr string) (*GRPCServer, error) {
 	var (
 		srv GRPCServer
 		err error
@@ -71,15 +87,37 @@ func NewServer(logic ServerLogic, addr, sekret_key string) (*GRPCServer, error) 
 		protovalidate_middleware.UnaryServerInterceptor(validator),
 	))
 
-	userIDGetter := handler.NewMDUserIDGetter(sekret_key)
+	// Функция хеширования паролей
+	hashFn := func(passwd string) (string, error) {
+		return handler.PasswordHash(passwd, PASSWORD_SALT)
+	}
+	// Функция генерирования токена
+	tokenFn := func(userId string) (string, error) {
+		return handler.MakeToken(userId, TOKEN_SECRET_KEY, TOKEN_EXP)
+	}
+	// Функция сравнения хеша и пароля пользователя
+	checkFn := func(password, hash string) bool {
+		return handler.CheckPasswordHash(hash, password, PASSWORD_SALT)
+	}
+
+	getUserID := func(ctx context.Context) (string, error) {
+		return handler.GetUserIDFromMD(ctx, TOKEN_SECRET_KEY)
+	}
 
 	// Подключаем ручки
-	srv.pingHandler = ping.NewRPCPingHandler(logic)
-	srv.regHandler = register.NewRPCRegisterHandler(logic)
-	srv.listHandler = list.NewRPCListHandler(logic, userIDGetter)
-	srv.loginHandler = login.NewRPCLoginHandler(logic)
+	srv.pingHandler = ping.NewRPCPingHandler(store)
+	srv.regHandler = register.NewRPCRegisterHandler(store, hashFn, tokenFn)
+	srv.loginHandler = login.NewRPCLoginHandler(store, checkFn, tokenFn)
+	srv.listHandler = list.NewRPCListHandler(store, getUserID)
 
 	// Password
+	srv.paswordListHandler = password.NewGRPCListHandler(store, getUserID)
+
+	// Payment card
+	srv.cardListHandler = card.NewGRPCListHandler(store, getUserID)
+
+	// Notes
+	srv.noteListHandler = note.NewGRPCListHandler(store, getUserID)
 
 	// регистрируем сервис
 	pb.RegisterGophKeeperServer(srv.server, srv)
@@ -92,48 +130,72 @@ func (s *GRPCServer) Start() error {
 }
 
 func (s GRPCServer) Ping(ctx context.Context, in *empty.Empty) (*pb.PingResponse, error) {
-	if s.pingHandler == nil {
-		return s.UnimplementedGophKeeperServer.Ping(ctx, in)
+	if s.pingHandler != nil {
+		return s.pingHandler(ctx, in)
 	}
-	return s.pingHandler(ctx, in)
+	return s.UnimplementedGophKeeperServer.Ping(ctx, in)
 }
 
 func (s GRPCServer) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.RegisterResponse, error) {
-	if s.regHandler == nil {
-		return s.UnimplementedGophKeeperServer.Register(ctx, in)
+	if s.regHandler != nil {
+		return s.regHandler(ctx, in)
 	}
-	return s.regHandler(ctx, in)
+	return s.UnimplementedGophKeeperServer.Register(ctx, in)
 }
 
 func (s GRPCServer) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginResponse, error) {
-	if s.loginHandler == nil {
-		return s.UnimplementedGophKeeperServer.Login(ctx, in)
+	if s.loginHandler != nil {
+		return s.loginHandler(ctx, in)
 	}
-	return s.loginHandler(ctx, in)
+	return s.UnimplementedGophKeeperServer.Login(ctx, in)
 }
 
 func (s GRPCServer) List(ctx context.Context, in *empty.Empty) (*pb.ListResponse, error) {
-	if s.listHandler == nil {
-		return s.UnimplementedGophKeeperServer.List(ctx, in)
+	if s.listHandler != nil {
+		return s.listHandler(ctx, in)
 	}
-	return s.listHandler(ctx, in)
+	return s.UnimplementedGophKeeperServer.List(ctx, in)
 }
 
+// Password
+
 func (s GRPCServer) PasswordList(ctx context.Context, in *empty.Empty) (*pb.PasswordListResponse, error) {
-	if s.passwdListHandler != nil {
-		return s.passwdListHandler(ctx, in)
+	if s.paswordListHandler != nil {
+		return s.paswordListHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.PasswordList(ctx, in)
 }
-func (s GRPCServer) PasswordWrite(ctx context.Context, in *pb.PasswordWriteRequest) (*empty.Empty, error) {
+
+func (s GRPCServer) PasswordWrite(ctx context.Context, in *pb.PasswordRequest) (*empty.Empty, error) {
 	return s.UnimplementedGophKeeperServer.PasswordWrite(ctx, in)
 }
-func (s GRPCServer) PasswordUpdate(ctx context.Context, in *pb.PasswordWriteRequest) (*empty.Empty, error) {
-	return s.UnimplementedGophKeeperServer.PasswordUpdate(ctx, in)
-}
-func (s GRPCServer) PasswordRead(ctx context.Context, in *pb.PasswordReadRequest) (*empty.Empty, error) {
+
+func (s GRPCServer) PasswordRead(ctx context.Context, in *pb.PasswordReadRequest) (*pb.PasswordResponse, error) {
 	return s.UnimplementedGophKeeperServer.PasswordRead(ctx, in)
 }
+
+func (s GRPCServer) PasswordUpdate(ctx context.Context, in *pb.PasswordRequest) (*empty.Empty, error) {
+	return s.UnimplementedGophKeeperServer.PasswordUpdate(ctx, in)
+}
+
 func (s GRPCServer) PasswordDelete(ctx context.Context, in *pb.PasswordReadRequest) (*empty.Empty, error) {
 	return s.UnimplementedGophKeeperServer.PasswordDelete(ctx, in)
+}
+
+// Cards
+
+func (s GRPCServer) CardList(ctx context.Context, in *empty.Empty) (*pb.CardListResponse, error) {
+	if s.cardListHandler != nil {
+		return s.cardListHandler(ctx, in)
+	}
+	return s.UnimplementedGophKeeperServer.CardList(ctx, in)
+}
+
+// Notes
+
+func (s GRPCServer) NoteList(ctx context.Context, in *empty.Empty) (*pb.NoteListResponse, error) {
+	if s.noteListHandler != nil {
+		return s.noteListHandler(ctx, in)
+	}
+	return s.UnimplementedGophKeeperServer.NoteList(ctx, in)
 }

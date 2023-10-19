@@ -9,42 +9,43 @@ import (
 
 	pb "github.com/eugene982/yp-gophkeeper/gen/go/proto/v1"
 	"github.com/eugene982/yp-gophkeeper/internal/handler"
+	"github.com/eugene982/yp-gophkeeper/internal/logger"
 	"github.com/eugene982/yp-gophkeeper/internal/storage"
 )
 
 // List интерфейс возвращающий количество данных пользователя
-type ListGetter interface {
-	List(ctx context.Context, userID string) (storage.ListData, error)
+type ListReader interface {
+	ReadList(context.Context, string) (storage.ListData, error)
 }
 
-type ListGetterFunc func(ctx context.Context, userID string) (storage.ListData, error)
+type ListReaderFunc func(ctx context.Context, userID string) (storage.ListData, error)
 
-func (f ListGetterFunc) List(ctx context.Context, userID string) (storage.ListData, error) {
+func (f ListReaderFunc) ReadList(ctx context.Context, userID string) (storage.ListData, error) {
 	return f(ctx, userID)
 }
 
-var _ ListGetter = ListGetterFunc(nil)
+var _ ListReader = ListReaderFunc(nil)
 
 type GRPCHandler func(context.Context, *empty.Empty) (*pb.ListResponse, error)
 
-func NewRPCListHandler(list ListGetter, ug handler.UserIDGetter) GRPCHandler {
+func NewRPCListHandler(list ListReader, getUserID handler.GetUserIDFunc) GRPCHandler {
 	return func(ctx context.Context, _ *empty.Empty) (*pb.ListResponse, error) {
 
-		userID, err := ug.GetUserID(ctx)
+		userID, err := getUserID(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		data, err := list.List(ctx, userID)
+		data, err := list.ReadList(ctx, userID)
 		if err != nil {
+			logger.Errorf("read user list error: %w", err)
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		resp := pb.ListResponse{
+		return &pb.ListResponse{
 			PasswordsCount: int32(data.PasswordsCount),
 			NotesCount:     int32(data.NotesCount),
 			CardsCount:     int32(data.CardsCount),
-		}
-		return &resp, nil
+		}, nil
 	}
 }

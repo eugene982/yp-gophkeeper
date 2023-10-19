@@ -2,37 +2,22 @@ package handler
 
 import (
 	"context"
-	"errors"
+	"fmt"
+	"time"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"github.com/eugene982/yp-gophkeeper/internal/utils/jwt"
+	"github.com/golang-jwt/jwt/v4"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
-	ErrAlreadyExists   = errors.New("already exists")
-	ErrUnauthenticated = errors.New("unauthenticated")
-
 	ErrRPCInvalidToken = status.Errorf(codes.Unauthenticated, "invalid token")
 )
 
-type UserIDGetter interface {
-	GetUserID(context.Context) (string, error)
-}
-
-type UserIDGetterFunc func(context.Context) (string, error)
-
-func (f UserIDGetterFunc) GetUserID(ctx context.Context) (string, error) {
-	return f(ctx)
-}
-
-func NewMDUserIDGetter(secret_key string) UserIDGetter {
-	return UserIDGetterFunc(func(ctx context.Context) (string, error) {
-		return GetUserIDFromMD(ctx, secret_key)
-	})
-}
+type GetUserIDFunc func(context.Context) (string, error)
 
 func GetUserIDFromMD(ctx context.Context, secret_key string) (string, error) {
 	var token string
@@ -45,9 +30,75 @@ func GetUserIDFromMD(ctx context.Context, secret_key string) (string, error) {
 		return "", ErrRPCInvalidToken
 	}
 
-	userID, err := jwt.GetUserID(token, secret_key)
+	userID, err := GetUserID(token, secret_key)
 	if err != nil {
 		return "", ErrRPCInvalidToken
 	}
 	return userID, nil
+}
+
+// PasswordHash - хеширование пароля
+func PasswordHash(password, salt string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password+salt), bcrypt.MinCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
+}
+
+// CheckPasswordHash - сверка пароля с хешем
+func CheckPasswordHash(hash, password, salt string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password+salt))
+	return err == nil
+}
+
+// Claims - структура утверждений, которая включает стандартные утверждения
+// и одно пользовательское UserID
+type claims struct {
+	jwt.RegisteredClaims
+	UserID string
+}
+
+// MakeToken cоздаёт токен и возвращает его в виде строки.
+func MakeToken(userID string, secret_key string, exp time.Duration) (string, error) {
+	// создаём новый токен с алгоритмом подписи HS256 и утверждением - Claims
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			// когда создан токен
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(exp)),
+		},
+		// собственное утверждение
+		UserID: userID,
+	})
+
+	// создаём строку токена
+	tokenString, err := token.SignedString([]byte(secret_key))
+	if err != nil {
+		return "", err
+	}
+	return tokenString, nil
+}
+
+// GetUserID возвращает идентификатор пользователя
+func GetUserID(token, secret_key string) (string, error) {
+	// создаём экземпляр утверждения
+	claims := &claims{}
+	// парсим из строки токена tokenString в структуру
+	jwtoken, err := jwt.ParseWithClaims(token, claims, func(t *jwt.Token) (interface{}, error) {
+		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok { // Проверка на совпадения метода подписи
+			return nil, fmt.Errorf("unexpected signed method: %v", t.Header["alg"])
+		}
+
+		return []byte(secret_key), nil
+	})
+
+	if err != nil {
+		return "", nil
+	}
+
+	if !jwtoken.Valid {
+		return "", fmt.Errorf("invalid token")
+	}
+	// возвращаем ID полезователя
+	return claims.UserID, nil
 }

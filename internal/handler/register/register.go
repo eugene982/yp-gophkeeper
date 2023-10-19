@@ -8,36 +8,54 @@ import (
 	"google.golang.org/grpc/status"
 
 	pb "github.com/eugene982/yp-gophkeeper/gen/go/proto/v1"
-	"github.com/eugene982/yp-gophkeeper/internal/handler"
+	"github.com/eugene982/yp-gophkeeper/internal/logger"
+	"github.com/eugene982/yp-gophkeeper/internal/storage"
 )
 
 // Register интерфейс отвечающий за регистрацию пользователей
-type Register interface {
-	Register(ctx context.Context, login, passwd string) (string, error)
+type UserWriter interface {
+	WriteUser(context.Context, storage.UserData) error
 }
 
-type RegisterFunc func(ctx context.Context, login, passwd string) (string, error)
+type UserWriterFunc func(context.Context, storage.UserData) error
 
-func (f RegisterFunc) Register(ctx context.Context, login, passwd string) (string, error) {
-	return f(ctx, login, passwd)
+func (f UserWriterFunc) WriteUser(ctx context.Context, data storage.UserData) error {
+	return f(ctx, data)
 }
 
-var _ Register = RegisterFunc(nil)
+var _ UserWriter = UserWriterFunc(nil)
 
 type GRPCHandler func(context.Context, *pb.RegisterRequest) (*pb.RegisterResponse, error)
 
-// NewRPCRegisterHandler - ручка регистрации нового пользователя
-func NewRPCRegisterHandler(register Register) GRPCHandler {
-	return func(ctx context.Context, in *pb.RegisterRequest) (*pb.RegisterResponse, error) {
-		var (
-			resp pb.RegisterResponse
-			err  error
-		)
+type PasswordHashFunc func(string) (string, error)
+type TokenGenFunc func(string) (string, error)
 
-		resp.Token, err = register.Register(ctx, in.Login, in.Password)
+// NewRPCRegisterHandler - ручка регистрации нового пользователя
+func NewRPCRegisterHandler(w UserWriter, hashFn PasswordHashFunc, tokenFn TokenGenFunc) GRPCHandler {
+	return func(ctx context.Context, in *pb.RegisterRequest) (*pb.RegisterResponse, error) {
+
+		hash, err := hashFn(in.Password)
+		if err != nil {
+			logger.Errorf("password hash error: %w", err)
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		var resp pb.RegisterResponse
+
+		resp.Token, err = tokenFn(in.Login)
+		if err != nil {
+			logger.Errorf("make token error: %w", err)
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
+		err = w.WriteUser(ctx, storage.UserData{
+			UserID:       in.Login,
+			PasswordHash: hash,
+		})
+
 		if err == nil {
 			return &resp, nil
-		} else if errors.Is(err, handler.ErrAlreadyExists) {
+		} else if errors.Is(err, storage.ErrWriteConflict) {
 			return nil, status.Error(codes.AlreadyExists, err.Error())
 		}
 

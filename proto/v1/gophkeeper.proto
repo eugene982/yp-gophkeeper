@@ -20,20 +20,32 @@ service GophKeeper {
     // List возвращает количество хранимых данных пользователя (защищённый)
     rpc List(google.protobuf.Empty) returns (ListResponse); 
 
+    // Passwords
+
     // PasswordList - возвращает список паролей пользователя
     rpc PasswordList(google.protobuf.Empty) returns (PasswordListResponse);
 
     // PasswordWrite запись нового пароля
-    rpc PasswordWrite(PasswordWriteRequest) returns (google.protobuf.Empty);
+    rpc PasswordWrite(PasswordRequest) returns (google.protobuf.Empty);
 
     // PasswordUpdate обновление имеющегочя пароля
-    rpc PasswordUpdate(PasswordWriteRequest) returns (google.protobuf.Empty);
+    rpc PasswordUpdate(PasswordRequest) returns (google.protobuf.Empty);
 
-     // PasswordRead удаление пароля
-     rpc PasswordRead(PasswordReadRequest) returns (google.protobuf.Empty);
+    // PasswordRead удаление пароля
+    rpc PasswordRead(PasswordReadRequest) returns (PasswordResponse);
     
     // PasswordDelete удаление пароля
     rpc PasswordDelete(PasswordReadRequest) returns (google.protobuf.Empty);
+
+    // Payment cards
+
+    // CardList - возвращает список банковских карт
+    rpc CardList(google.protobuf.Empty) returns (CardListResponse);
+
+    // Notes
+
+    rpc NoteList(google.protobuf.Empty) returns (NoteListResponse); 
+
 }
 
 // Ping
@@ -73,15 +85,15 @@ message PasswordListResponse {
     repeated string names = 1;  // массив наименований  
 }
 
-message PasswordWriteRequest {
+message PasswordReadRequest {
+    string name = 1[(buf.validate.field).string.min_len = 1];
+}
+
+message PasswordRequest {
     string name     = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
     string username = 2[(buf.validate.field).string.max_len = 128];
     string password = 3[(buf.validate.field).string.max_len = 128];
     string notes    = 4;
-}
-
-message PasswordReadRequest {
-    string name = 1[(buf.validate.field).string.min_len = 1];
 }
 
 message PasswordResponse {
@@ -89,4 +101,14 @@ message PasswordResponse {
     string username = 2;
     string password = 3;
     string notes    = 4;
+}
+
+// Payment card
+message CardListResponse {
+    repeated string names = 1;  // массив наименований  
+}
+
+// Note
+message NoteListResponse {
+    repeated string names = 1;  // массив наименований  
 }

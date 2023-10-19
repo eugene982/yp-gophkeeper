@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"google.golang.org/grpc"
@@ -32,6 +33,15 @@ var (
 		"ls":    lsCmd,
 		"list":  lsCmd,
 		"login": loginCmd,
+
+		"passwords": lsPasswordCmd,
+		"lspass":    lsPasswordCmd,
+
+		"cards": lsCardCmd,
+		"lscrd": lsCardCmd,
+
+		"notes": lsNoteCmd,
+		"lsnt":  lsNoteCmd,
 	}
 )
 
@@ -198,6 +208,48 @@ func lsCmd() error {
 	fmt.Println("\tNotes    :", resp.NotesCount)
 	fmt.Println("\tCards    :", resp.CardsCount)
 	fmt.Println("\tPasswords:", resp.PasswordsCount)
+
+	return nil
+}
+
+func lsPasswordCmd() error {
+
+	ctx := withToken(context.Background())
+	resp, err := client.PasswordList(ctx, &empty.Empty{})
+	if err != nil {
+		return nil
+	}
+
+	fmt.Println("\tPasswords:", strings.Join(resp.Names, "; "))
+	fmt.Println("\tCount: ", len(resp.Names))
+
+	return nil
+}
+
+func lsCardCmd() error {
+
+	ctx := withToken(context.Background())
+	resp, err := client.CardList(ctx, &empty.Empty{})
+	if err != nil {
+		return nil
+	}
+
+	fmt.Println("\tCards:", strings.Join(resp.Names, "; "))
+	fmt.Println("\tCount: ", len(resp.Names))
+
+	return nil
+}
+
+func lsNoteCmd() error {
+
+	ctx := withToken(context.Background())
+	resp, err := client.NoteList(ctx, &empty.Empty{})
+	if err != nil {
+		return nil
+	}
+
+	fmt.Println("\tNotes:", strings.Join(resp.Names, "; "))
+	fmt.Println("\tCount: ", len(resp.Names))
 
 	return nil
 }
