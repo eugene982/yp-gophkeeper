@@ -42,7 +42,7 @@ func NewGRPCListHandler(g PasswordListGetter, getUserID handler.GetUserIDFunc) G
 				return nil, status.Error(codes.NotFound, err.Error())
 			}
 
-			logger.Errorf("read password list error: %w", err)
+			logger.Errorf("read passwords list error: %w", err)
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 		return &resp, nil

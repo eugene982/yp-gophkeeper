@@ -52,7 +52,8 @@ type GRPCServer struct {
 	listHandler  list.GRPCHandler
 
 	// password
-	paswordListHandler password.GRPCListHandler
+	passwdListHandler  password.GRPCListHandler
+	passwdWriteHandler password.GRPCWriteHandler
 
 	// cards
 	cardListHandler card.GRPCListHandler
@@ -111,7 +112,8 @@ func NewServer(store storage.Storage, addr string) (*GRPCServer, error) {
 	srv.listHandler = list.NewRPCListHandler(store, getUserID)
 
 	// Password
-	srv.paswordListHandler = password.NewGRPCListHandler(store, getUserID)
+	srv.passwdListHandler = password.NewGRPCListHandler(store, getUserID)
+	srv.passwdWriteHandler = password.NewGRPCWriteHandler(store, getUserID)
 
 	// Payment card
 	srv.cardListHandler = card.NewGRPCListHandler(store, getUserID)
@@ -160,25 +162,28 @@ func (s GRPCServer) List(ctx context.Context, in *empty.Empty) (*pb.ListResponse
 // Password
 
 func (s GRPCServer) PasswordList(ctx context.Context, in *empty.Empty) (*pb.PasswordListResponse, error) {
-	if s.paswordListHandler != nil {
-		return s.paswordListHandler(ctx, in)
+	if s.passwdListHandler != nil {
+		return s.passwdListHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.PasswordList(ctx, in)
 }
 
-func (s GRPCServer) PasswordWrite(ctx context.Context, in *pb.PasswordRequest) (*empty.Empty, error) {
+func (s GRPCServer) PasswordWrite(ctx context.Context, in *pb.PasswordWriteRequest) (*empty.Empty, error) {
+	if s.passwdWriteHandler != nil {
+		return s.passwdWriteHandler(ctx, in)
+	}
 	return s.UnimplementedGophKeeperServer.PasswordWrite(ctx, in)
 }
 
-func (s GRPCServer) PasswordRead(ctx context.Context, in *pb.PasswordReadRequest) (*pb.PasswordResponse, error) {
+func (s GRPCServer) PasswordRead(ctx context.Context, in *pb.PasswordReadRequest) (*pb.PasswordReadResponse, error) {
 	return s.UnimplementedGophKeeperServer.PasswordRead(ctx, in)
 }
 
-func (s GRPCServer) PasswordUpdate(ctx context.Context, in *pb.PasswordRequest) (*empty.Empty, error) {
+func (s GRPCServer) PasswordUpdate(ctx context.Context, in *pb.PasswordUpdateRequest) (*empty.Empty, error) {
 	return s.UnimplementedGophKeeperServer.PasswordUpdate(ctx, in)
 }
 
-func (s GRPCServer) PasswordDelete(ctx context.Context, in *pb.PasswordReadRequest) (*empty.Empty, error) {
+func (s GRPCServer) PasswordDelete(ctx context.Context, in *pb.PasswordDelRequest) (*empty.Empty, error) {
 	return s.UnimplementedGophKeeperServer.PasswordDelete(ctx, in)
 }
 

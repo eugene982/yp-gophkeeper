@@ -30,7 +30,15 @@ const (
 	GophKeeper_PasswordRead_FullMethodName   = "/gophermart.v1.GophKeeper/PasswordRead"
 	GophKeeper_PasswordDelete_FullMethodName = "/gophermart.v1.GophKeeper/PasswordDelete"
 	GophKeeper_CardList_FullMethodName       = "/gophermart.v1.GophKeeper/CardList"
+	GophKeeper_CardWrite_FullMethodName      = "/gophermart.v1.GophKeeper/CardWrite"
+	GophKeeper_CardUpdate_FullMethodName     = "/gophermart.v1.GophKeeper/CardUpdate"
+	GophKeeper_CardRead_FullMethodName       = "/gophermart.v1.GophKeeper/CardRead"
+	GophKeeper_CardDelete_FullMethodName     = "/gophermart.v1.GophKeeper/CardDelete"
 	GophKeeper_NoteList_FullMethodName       = "/gophermart.v1.GophKeeper/NoteList"
+	GophKeeper_NoteWrite_FullMethodName      = "/gophermart.v1.GophKeeper/NoteWrite"
+	GophKeeper_NoteUpdate_FullMethodName     = "/gophermart.v1.GophKeeper/NoteUpdate"
+	GophKeeper_NoteRead_FullMethodName       = "/gophermart.v1.GophKeeper/NoteRead"
+	GophKeeper_NoteDelete_FullMethodName     = "/gophermart.v1.GophKeeper/NoteDelete"
 )
 
 // GophKeeperClient is the client API for GophKeeper service.
@@ -48,16 +56,33 @@ type GophKeeperClient interface {
 	// PasswordList - возвращает список паролей пользователя
 	PasswordList(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*PasswordListResponse, error)
 	// PasswordWrite запись нового пароля
-	PasswordWrite(ctx context.Context, in *PasswordRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	PasswordWrite(ctx context.Context, in *PasswordWriteRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	// PasswordUpdate обновление имеющегочя пароля
-	PasswordUpdate(ctx context.Context, in *PasswordRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	PasswordUpdate(ctx context.Context, in *PasswordUpdateRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	// PasswordRead удаление пароля
-	PasswordRead(ctx context.Context, in *PasswordReadRequest, opts ...grpc.CallOption) (*PasswordResponse, error)
+	PasswordRead(ctx context.Context, in *PasswordReadRequest, opts ...grpc.CallOption) (*PasswordReadResponse, error)
 	// PasswordDelete удаление пароля
-	PasswordDelete(ctx context.Context, in *PasswordReadRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	PasswordDelete(ctx context.Context, in *PasswordDelRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	// CardList - возвращает список банковских карт
 	CardList(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*CardListResponse, error)
+	// CardWrite запись нового
+	CardWrite(ctx context.Context, in *CardWriteRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	// CardUpdate обновление
+	CardUpdate(ctx context.Context, in *CardUpdateRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	// CardRead чтение
+	CardRead(ctx context.Context, in *CardReadRequest, opts ...grpc.CallOption) (*CardReadResponse, error)
+	// CardDelete удаление
+	CardDelete(ctx context.Context, in *CardDelRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	// NoteList - список
 	NoteList(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*NoteListResponse, error)
+	// CardWrite запись нового
+	NoteWrite(ctx context.Context, in *NoteWriteRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	// CardUpdate обновление
+	NoteUpdate(ctx context.Context, in *NoteUpdateRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	// CardRead чтение
+	NoteRead(ctx context.Context, in *NoteReadRequest, opts ...grpc.CallOption) (*NoteReadResponse, error)
+	// CardDelete удаление
+	NoteDelete(ctx context.Context, in *NoteDelRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 }
 
 type gophKeeperClient struct {
@@ -113,7 +138,7 @@ func (c *gophKeeperClient) PasswordList(ctx context.Context, in *empty.Empty, op
 	return out, nil
 }
 
-func (c *gophKeeperClient) PasswordWrite(ctx context.Context, in *PasswordRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (c *gophKeeperClient) PasswordWrite(ctx context.Context, in *PasswordWriteRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
 	err := c.cc.Invoke(ctx, GophKeeper_PasswordWrite_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -122,7 +147,7 @@ func (c *gophKeeperClient) PasswordWrite(ctx context.Context, in *PasswordReques
 	return out, nil
 }
 
-func (c *gophKeeperClient) PasswordUpdate(ctx context.Context, in *PasswordRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (c *gophKeeperClient) PasswordUpdate(ctx context.Context, in *PasswordUpdateRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
 	err := c.cc.Invoke(ctx, GophKeeper_PasswordUpdate_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -131,8 +156,8 @@ func (c *gophKeeperClient) PasswordUpdate(ctx context.Context, in *PasswordReque
 	return out, nil
 }
 
-func (c *gophKeeperClient) PasswordRead(ctx context.Context, in *PasswordReadRequest, opts ...grpc.CallOption) (*PasswordResponse, error) {
-	out := new(PasswordResponse)
+func (c *gophKeeperClient) PasswordRead(ctx context.Context, in *PasswordReadRequest, opts ...grpc.CallOption) (*PasswordReadResponse, error) {
+	out := new(PasswordReadResponse)
 	err := c.cc.Invoke(ctx, GophKeeper_PasswordRead_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -140,7 +165,7 @@ func (c *gophKeeperClient) PasswordRead(ctx context.Context, in *PasswordReadReq
 	return out, nil
 }
 
-func (c *gophKeeperClient) PasswordDelete(ctx context.Context, in *PasswordReadRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+func (c *gophKeeperClient) PasswordDelete(ctx context.Context, in *PasswordDelRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
 	err := c.cc.Invoke(ctx, GophKeeper_PasswordDelete_FullMethodName, in, out, opts...)
 	if err != nil {
@@ -158,9 +183,81 @@ func (c *gophKeeperClient) CardList(ctx context.Context, in *empty.Empty, opts .
 	return out, nil
 }
 
+func (c *gophKeeperClient) CardWrite(ctx context.Context, in *CardWriteRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, GophKeeper_CardWrite_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gophKeeperClient) CardUpdate(ctx context.Context, in *CardUpdateRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, GophKeeper_CardUpdate_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gophKeeperClient) CardRead(ctx context.Context, in *CardReadRequest, opts ...grpc.CallOption) (*CardReadResponse, error) {
+	out := new(CardReadResponse)
+	err := c.cc.Invoke(ctx, GophKeeper_CardRead_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gophKeeperClient) CardDelete(ctx context.Context, in *CardDelRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, GophKeeper_CardDelete_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *gophKeeperClient) NoteList(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*NoteListResponse, error) {
 	out := new(NoteListResponse)
 	err := c.cc.Invoke(ctx, GophKeeper_NoteList_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gophKeeperClient) NoteWrite(ctx context.Context, in *NoteWriteRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, GophKeeper_NoteWrite_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gophKeeperClient) NoteUpdate(ctx context.Context, in *NoteUpdateRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, GophKeeper_NoteUpdate_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gophKeeperClient) NoteRead(ctx context.Context, in *NoteReadRequest, opts ...grpc.CallOption) (*NoteReadResponse, error) {
+	out := new(NoteReadResponse)
+	err := c.cc.Invoke(ctx, GophKeeper_NoteRead_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gophKeeperClient) NoteDelete(ctx context.Context, in *NoteDelRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, GophKeeper_NoteDelete_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -182,16 +279,33 @@ type GophKeeperServer interface {
 	// PasswordList - возвращает список паролей пользователя
 	PasswordList(context.Context, *empty.Empty) (*PasswordListResponse, error)
 	// PasswordWrite запись нового пароля
-	PasswordWrite(context.Context, *PasswordRequest) (*empty.Empty, error)
+	PasswordWrite(context.Context, *PasswordWriteRequest) (*empty.Empty, error)
 	// PasswordUpdate обновление имеющегочя пароля
-	PasswordUpdate(context.Context, *PasswordRequest) (*empty.Empty, error)
+	PasswordUpdate(context.Context, *PasswordUpdateRequest) (*empty.Empty, error)
 	// PasswordRead удаление пароля
-	PasswordRead(context.Context, *PasswordReadRequest) (*PasswordResponse, error)
+	PasswordRead(context.Context, *PasswordReadRequest) (*PasswordReadResponse, error)
 	// PasswordDelete удаление пароля
-	PasswordDelete(context.Context, *PasswordReadRequest) (*empty.Empty, error)
+	PasswordDelete(context.Context, *PasswordDelRequest) (*empty.Empty, error)
 	// CardList - возвращает список банковских карт
 	CardList(context.Context, *empty.Empty) (*CardListResponse, error)
+	// CardWrite запись нового
+	CardWrite(context.Context, *CardWriteRequest) (*empty.Empty, error)
+	// CardUpdate обновление
+	CardUpdate(context.Context, *CardUpdateRequest) (*empty.Empty, error)
+	// CardRead чтение
+	CardRead(context.Context, *CardReadRequest) (*CardReadResponse, error)
+	// CardDelete удаление
+	CardDelete(context.Context, *CardDelRequest) (*empty.Empty, error)
+	// NoteList - список
 	NoteList(context.Context, *empty.Empty) (*NoteListResponse, error)
+	// CardWrite запись нового
+	NoteWrite(context.Context, *NoteWriteRequest) (*empty.Empty, error)
+	// CardUpdate обновление
+	NoteUpdate(context.Context, *NoteUpdateRequest) (*empty.Empty, error)
+	// CardRead чтение
+	NoteRead(context.Context, *NoteReadRequest) (*NoteReadResponse, error)
+	// CardDelete удаление
+	NoteDelete(context.Context, *NoteDelRequest) (*empty.Empty, error)
 	mustEmbedUnimplementedGophKeeperServer()
 }
 
@@ -214,23 +328,47 @@ func (UnimplementedGophKeeperServer) List(context.Context, *empty.Empty) (*ListR
 func (UnimplementedGophKeeperServer) PasswordList(context.Context, *empty.Empty) (*PasswordListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PasswordList not implemented")
 }
-func (UnimplementedGophKeeperServer) PasswordWrite(context.Context, *PasswordRequest) (*empty.Empty, error) {
+func (UnimplementedGophKeeperServer) PasswordWrite(context.Context, *PasswordWriteRequest) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PasswordWrite not implemented")
 }
-func (UnimplementedGophKeeperServer) PasswordUpdate(context.Context, *PasswordRequest) (*empty.Empty, error) {
+func (UnimplementedGophKeeperServer) PasswordUpdate(context.Context, *PasswordUpdateRequest) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PasswordUpdate not implemented")
 }
-func (UnimplementedGophKeeperServer) PasswordRead(context.Context, *PasswordReadRequest) (*PasswordResponse, error) {
+func (UnimplementedGophKeeperServer) PasswordRead(context.Context, *PasswordReadRequest) (*PasswordReadResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PasswordRead not implemented")
 }
-func (UnimplementedGophKeeperServer) PasswordDelete(context.Context, *PasswordReadRequest) (*empty.Empty, error) {
+func (UnimplementedGophKeeperServer) PasswordDelete(context.Context, *PasswordDelRequest) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PasswordDelete not implemented")
 }
 func (UnimplementedGophKeeperServer) CardList(context.Context, *empty.Empty) (*CardListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CardList not implemented")
 }
+func (UnimplementedGophKeeperServer) CardWrite(context.Context, *CardWriteRequest) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CardWrite not implemented")
+}
+func (UnimplementedGophKeeperServer) CardUpdate(context.Context, *CardUpdateRequest) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CardUpdate not implemented")
+}
+func (UnimplementedGophKeeperServer) CardRead(context.Context, *CardReadRequest) (*CardReadResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CardRead not implemented")
+}
+func (UnimplementedGophKeeperServer) CardDelete(context.Context, *CardDelRequest) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CardDelete not implemented")
+}
 func (UnimplementedGophKeeperServer) NoteList(context.Context, *empty.Empty) (*NoteListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NoteList not implemented")
+}
+func (UnimplementedGophKeeperServer) NoteWrite(context.Context, *NoteWriteRequest) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NoteWrite not implemented")
+}
+func (UnimplementedGophKeeperServer) NoteUpdate(context.Context, *NoteUpdateRequest) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NoteUpdate not implemented")
+}
+func (UnimplementedGophKeeperServer) NoteRead(context.Context, *NoteReadRequest) (*NoteReadResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NoteRead not implemented")
+}
+func (UnimplementedGophKeeperServer) NoteDelete(context.Context, *NoteDelRequest) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NoteDelete not implemented")
 }
 func (UnimplementedGophKeeperServer) mustEmbedUnimplementedGophKeeperServer() {}
 
@@ -336,7 +474,7 @@ func _GophKeeper_PasswordList_Handler(srv interface{}, ctx context.Context, dec 
 }
 
 func _GophKeeper_PasswordWrite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PasswordRequest)
+	in := new(PasswordWriteRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -348,13 +486,13 @@ func _GophKeeper_PasswordWrite_Handler(srv interface{}, ctx context.Context, dec
 		FullMethod: GophKeeper_PasswordWrite_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GophKeeperServer).PasswordWrite(ctx, req.(*PasswordRequest))
+		return srv.(GophKeeperServer).PasswordWrite(ctx, req.(*PasswordWriteRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _GophKeeper_PasswordUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PasswordRequest)
+	in := new(PasswordUpdateRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -366,7 +504,7 @@ func _GophKeeper_PasswordUpdate_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: GophKeeper_PasswordUpdate_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GophKeeperServer).PasswordUpdate(ctx, req.(*PasswordRequest))
+		return srv.(GophKeeperServer).PasswordUpdate(ctx, req.(*PasswordUpdateRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -390,7 +528,7 @@ func _GophKeeper_PasswordRead_Handler(srv interface{}, ctx context.Context, dec 
 }
 
 func _GophKeeper_PasswordDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PasswordReadRequest)
+	in := new(PasswordDelRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -402,7 +540,7 @@ func _GophKeeper_PasswordDelete_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: GophKeeper_PasswordDelete_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GophKeeperServer).PasswordDelete(ctx, req.(*PasswordReadRequest))
+		return srv.(GophKeeperServer).PasswordDelete(ctx, req.(*PasswordDelRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -425,6 +563,78 @@ func _GophKeeper_CardList_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GophKeeper_CardWrite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CardWriteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GophKeeperServer).CardWrite(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GophKeeper_CardWrite_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GophKeeperServer).CardWrite(ctx, req.(*CardWriteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GophKeeper_CardUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CardUpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GophKeeperServer).CardUpdate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GophKeeper_CardUpdate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GophKeeperServer).CardUpdate(ctx, req.(*CardUpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GophKeeper_CardRead_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CardReadRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GophKeeperServer).CardRead(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GophKeeper_CardRead_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GophKeeperServer).CardRead(ctx, req.(*CardReadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GophKeeper_CardDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CardDelRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GophKeeperServer).CardDelete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GophKeeper_CardDelete_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GophKeeperServer).CardDelete(ctx, req.(*CardDelRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _GophKeeper_NoteList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(empty.Empty)
 	if err := dec(in); err != nil {
@@ -439,6 +649,78 @@ func _GophKeeper_NoteList_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(GophKeeperServer).NoteList(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GophKeeper_NoteWrite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NoteWriteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GophKeeperServer).NoteWrite(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GophKeeper_NoteWrite_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GophKeeperServer).NoteWrite(ctx, req.(*NoteWriteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GophKeeper_NoteUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NoteUpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GophKeeperServer).NoteUpdate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GophKeeper_NoteUpdate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GophKeeperServer).NoteUpdate(ctx, req.(*NoteUpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GophKeeper_NoteRead_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NoteReadRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GophKeeperServer).NoteRead(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GophKeeper_NoteRead_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GophKeeperServer).NoteRead(ctx, req.(*NoteReadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GophKeeper_NoteDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NoteDelRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GophKeeperServer).NoteDelete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GophKeeper_NoteDelete_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GophKeeperServer).NoteDelete(ctx, req.(*NoteDelRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -491,8 +773,40 @@ var GophKeeper_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _GophKeeper_CardList_Handler,
 		},
 		{
+			MethodName: "CardWrite",
+			Handler:    _GophKeeper_CardWrite_Handler,
+		},
+		{
+			MethodName: "CardUpdate",
+			Handler:    _GophKeeper_CardUpdate_Handler,
+		},
+		{
+			MethodName: "CardRead",
+			Handler:    _GophKeeper_CardRead_Handler,
+		},
+		{
+			MethodName: "CardDelete",
+			Handler:    _GophKeeper_CardDelete_Handler,
+		},
+		{
 			MethodName: "NoteList",
 			Handler:    _GophKeeper_NoteList_Handler,
+		},
+		{
+			MethodName: "NoteWrite",
+			Handler:    _GophKeeper_NoteWrite_Handler,
+		},
+		{
+			MethodName: "NoteUpdate",
+			Handler:    _GophKeeper_NoteUpdate_Handler,
+		},
+		{
+			MethodName: "NoteRead",
+			Handler:    _GophKeeper_NoteRead_Handler,
+		},
+		{
+			MethodName: "NoteDelete",
+			Handler:    _GophKeeper_NoteDelete_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

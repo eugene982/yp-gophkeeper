@@ -52,9 +52,6 @@ func RegDriver(db Storage) {
 	database = db
 }
 
-// Специальный тип чтоб не перепутать параметры
-type TableName string
-
 // Интерфейс для хранилища данных
 type Storage interface {
 	Open(*sqlx.DB) error
@@ -66,17 +63,19 @@ type Storage interface {
 
 	// Password
 	PasswordList(ctx context.Context, userID string) ([]string, error)
+	PasswordRead(ctx context.Context, userID, name string) (PasswordData, error)
+	PasswordWrite(ctx context.Context, data PasswordData) error
+	PasswordDelete(ctx context.Context, userID, name string) error
 
 	// Card
 	CardList(ctx context.Context, userID string) ([]string, error)
+	CardRead(ctx context.Context, userID, name string) (CardData, error)
+	CardWrite(ctx context.Context, data CardData) error
+	CardDelete(ctx context.Context, userID, name string) error
 
 	// Notes
 	NoteList(ctx context.Context, userID string) ([]string, error)
-
-	//Write(ctx context.Context, data any) error
-	//Update(ctx context.Context, data any) error
-
-	//NamesList(ctx context.Context, tab TableName, userID string) ([]string, error)
-	//ReadByName(ctx context.Context, tab TableName, userID, name string) (any, error)
-	//DeleteByName(ctx context.Context, tab TableName, userID, name string) error
+	NoteRead(ctx context.Context, userID, name string) (NoteData, error)
+	NoteWrite(ctx context.Context, data NoteData) error
+	NoteDelete(ctx context.Context, userID, name string) error
 }

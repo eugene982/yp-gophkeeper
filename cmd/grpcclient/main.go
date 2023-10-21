@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -22,11 +24,17 @@ var (
 	debugMode bool
 	userName  string // имя пользователя
 	userToken string // токен пользователя
-	srvAddr   string // адрес сервера
-	client    pb.GophKeeperClient
+	currTable string // текущая таблица
+
+	srvAddr string // адрес сервера
+	client  pb.GophKeeperClient
+
+	errUnauthenticated = errors.New("unauthenticated")
+
+	conReader = consoleReader{bufio.NewReader(os.Stdin)}
 
 	// обработчики комманд
-	handlers = map[string](func() error){
+	handlers = map[string](func([]string) error){
 		"help":  helpCmd,
 		"ping":  pingCmd,
 		"reg":   regCmd,
@@ -34,8 +42,11 @@ var (
 		"list":  lsCmd,
 		"login": loginCmd,
 
-		"passwords": lsPasswordCmd,
-		"lspass":    lsPasswordCmd,
+		"new": newCmd,
+
+		"passwords":   passwordsCmd,
+		"lspasswords": lsPasswordCmd,
+		"newpassword": newPasswordCmd,
 
 		"cards": lsCardCmd,
 		"lscrd": lsCardCmd,
@@ -44,6 +55,26 @@ var (
 		"lsnt":  lsNoteCmd,
 	}
 )
+
+type consoleReader struct {
+	reader *bufio.Reader
+}
+
+func (c consoleReader) ReadLine() (string, error) {
+	s, err := c.reader.ReadString('\n')
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(s), nil
+}
+
+func (c consoleReader) ReadFields() ([]string, error) {
+	str, err := c.ReadLine()
+	if err != nil {
+		return nil, err
+	}
+	return strings.Split(str, " "), nil
+}
 
 func main() {
 
@@ -70,13 +101,15 @@ func run() error {
 	client = pb.NewGophKeeperClient(conn)
 
 	var (
-		cmd string = "help"
+		cmd     string   = "help"
+		cmdArgs []string = nil
 	)
 
-	for mainLop(cmd) {
+	for mainLop(cmd, cmdArgs) {
 		prompt()
+		cmdArgs = nil
 
-		_, err := fmt.Scanln(&cmd)
+		args, err := conReader.ReadFields()
 		if err != nil {
 			log.Println("fmt.Scanln err:", err)
 			if err == io.EOF {
@@ -85,13 +118,17 @@ func run() error {
 			fmt.Fprintln(os.Stderr, "wrong command")
 			cmd = "help"
 			continue
+		} else if len(args) == 0 {
+			cmd = "help"
+			continue
 		}
-
+		cmd = args[0]
+		cmdArgs = args[1:]
 	}
 	return nil
 }
 
-func mainLop(cmd string) bool {
+func mainLop(cmd string, args []string) bool {
 	if cmd == "q" || cmd == "quit" || cmd == "exit" {
 		return false
 	} else if cmd == "" {
@@ -101,11 +138,11 @@ func mainLop(cmd string) bool {
 	fn, ok := handlers[cmd]
 	if !ok {
 		fmt.Fprintln(os.Stderr, "wrong command")
-		helpCmd()
+		helpCmd(nil)
 		return true
 	}
 
-	err := fn()
+	err := fn(args)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 	}
@@ -116,12 +153,14 @@ func mainLop(cmd string) bool {
 func prompt() {
 	if userName == "" {
 		fmt.Printf("%s>", srvAddr)
-	} else {
+	} else if currTable == "" {
 		fmt.Printf("%s@%s>", userName, srvAddr)
+	} else {
+		fmt.Printf("%s@%s/%s>", userName, srvAddr, currTable)
 	}
 }
 
-func helpCmd() error {
+func helpCmd([]string) error {
 	fmt.Println(`	"help"       - вывод справки по командам 
 	"quit" ("q") - выход из программы"
 	"ping"       - проверка соединение (пинг)
@@ -130,7 +169,7 @@ func helpCmd() error {
 	return nil
 }
 
-func pingCmd() error {
+func pingCmd([]string) error {
 	resp, err := client.Ping(context.Background(), &empty.Empty{})
 	if err != nil {
 		return err
@@ -139,7 +178,7 @@ func pingCmd() error {
 	return nil
 }
 
-func regCmd() error {
+func regCmd([]string) error {
 	var login, passwd string
 
 	fmt.Print("\tlogin:")
@@ -168,19 +207,27 @@ func regCmd() error {
 	return nil
 }
 
-func loginCmd() error {
+func loginCmd(args []string) (err error) {
 	var login, passwd string
 
-	fmt.Print("\tlogin:")
-	_, err := fmt.Scanln(&login)
-	if err != nil {
-		return err
+	if len(args) > 1 {
+		login = args[0]
+	} else {
+		fmt.Print("\tlogin:")
+		login, err = conReader.ReadLine()
+		if err != nil {
+			return err
+		}
 	}
 
-	fmt.Print("\tpassword:")
-	_, err = fmt.Scanln(&passwd)
-	if err != nil {
-		return err
+	if len(args) > 2 {
+		passwd = args[1]
+	} else {
+		fmt.Print("\tpassword:")
+		passwd, err = conReader.ReadLine()
+		if err != nil {
+			return err
+		}
 	}
 
 	req := pb.LoginRequest{
@@ -197,7 +244,12 @@ func loginCmd() error {
 	return nil
 }
 
-func lsCmd() error {
+func lsCmd(args []string) error {
+
+	switch currTable {
+	case "passwords":
+		return lsPasswordCmd(args)
+	}
 
 	ctx := withToken(context.Background())
 	resp, err := client.List(ctx, &empty.Empty{})
@@ -212,7 +264,23 @@ func lsCmd() error {
 	return nil
 }
 
-func lsPasswordCmd() error {
+func newCmd(args []string) error {
+	switch currTable {
+	case "passwords":
+		return newPasswordCmd(args)
+	}
+	return errors.New("выберите таблицу: passwords, cards, notes...")
+}
+
+func passwordsCmd([]string) error {
+	if userName == "" {
+		return errUnauthenticated
+	}
+	currTable = "passwords"
+	return nil
+}
+
+func lsPasswordCmd([]string) error {
 
 	ctx := withToken(context.Background())
 	resp, err := client.PasswordList(ctx, &empty.Empty{})
@@ -226,7 +294,43 @@ func lsPasswordCmd() error {
 	return nil
 }
 
-func lsCardCmd() error {
+func newPasswordCmd([]string) (err error) {
+	var req pb.PasswordWriteRequest
+
+	fmt.Print("\tName:")
+	req.Name, err = conReader.ReadLine()
+	if err != nil {
+		return err
+	}
+
+	fmt.Print("\tUsername:")
+	req.Username, err = conReader.ReadLine()
+	if err != nil {
+		return err
+	}
+
+	fmt.Print("\tPassword:")
+	req.Password, err = conReader.ReadLine()
+	if err != nil {
+		return err
+	}
+
+	fmt.Print("\tNotes:")
+	req.Notes, err = conReader.ReadLine()
+	if err != nil {
+		return err
+	}
+
+	ctx := withToken(context.Background())
+	_, err = client.PasswordWrite(ctx, &req)
+	if err != nil {
+		return err
+	}
+	fmt.Println("\tOK")
+	return nil
+}
+
+func lsCardCmd([]string) error {
 
 	ctx := withToken(context.Background())
 	resp, err := client.CardList(ctx, &empty.Empty{})
@@ -240,7 +344,7 @@ func lsCardCmd() error {
 	return nil
 }
 
-func lsNoteCmd() error {
+func lsNoteCmd([]string) error {
 
 	ctx := withToken(context.Background())
 	resp, err := client.NoteList(ctx, &empty.Empty{})

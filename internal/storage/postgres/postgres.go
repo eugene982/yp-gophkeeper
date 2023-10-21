@@ -5,7 +5,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"fmt"
 
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -70,11 +69,32 @@ var (
 		// Пароль
 		"passwords": `INSERT INTO passwords (user_id, name, username, password, notes)
 		VALUES(:user_id, :name, :username, :password, :notes);`,
+
+		// Карточки
+		"cards": `INSERT INTO cards (user_id, name, number, notes)
+		VALUES(:user_id, :name, :number, :notes);`,
+
+		// Заметки
+		"notes": `INSERT INTO cards (user_id, name, notes)
+		VALUES(:user_id, :name, :notes);`,
 	}
 
 	updateQuery = map[string]string{ // запросы на обновление данных
-		"users":     "",
-		"passwords": "",
+		"users": `UPDATE users 
+		SET user_id=:user_id, passwd_hash=:passwd_hash  
+		WHERE user_id=:user_id;`,
+
+		"passwords": `UPDATE passwords 
+		SET user_id=:user_id, name=:name, username=:username, password=:password, notes=:notes  
+		WHERE user_id=:user_id AND name=:name;`,
+
+		"cards": `UPDATE cards 
+		SET user_id=:user_id, name=:name, number=:number, notes=:notes  
+		WHERE user_id=:user_id AND name=:name;`,
+
+		"notes": `UPDATE notes 
+		SET user_id=:user_id, name=:name, notes=:notes  
+		WHERE user_id=:user_id AND name=:name;`,
 	}
 )
 
@@ -149,32 +169,67 @@ func (p *PgxStore) ReadList(ctx context.Context, userID string) (res storage.Lis
 	return
 }
 
-func (p *PgxStore) namesList(ctx context.Context, tabname storage.TableName, userID string) ([]string, error) {
-	query := fmt.Sprintf(`
-		SELECT name FROM %s
-		WHERE user_id = $1`, tabname)
-
-	res := make([]string, 0)
-	err := p.db.GetContext(ctx, &res, query, userID)
-
-	if err != nil {
-		err = errNoContent(err)
-		return nil, err
-	}
-	return res, nil
-}
+// Passwords //
 
 func (p *PgxStore) PasswordList(ctx context.Context, userID string) ([]string, error) {
 	return p.namesList(ctx, "passwords", userID)
 }
 
+func (p *PgxStore) PasswordWrite(ctx context.Context, data storage.PasswordData) error {
+	return p.Write(ctx, data)
+}
+
+func (p *PgxStore) PasswordRead(ctx context.Context, userID, name string) (res storage.PasswordData, err error) {
+	err = p.readFirstByName(ctx, &res, userID, name)
+	return
+}
+
+func (p *PgxStore) PasswordDelete(ctx context.Context, userID, name string) (err error) {
+	err = p.deleteByName(ctx, "passwords", userID, name)
+	return
+}
+
+// Cards //
+
 func (p *PgxStore) CardList(ctx context.Context, userID string) ([]string, error) {
 	return p.namesList(ctx, "cards", userID)
 }
 
+func (p *PgxStore) CardWrite(ctx context.Context, data storage.CardData) error {
+	return p.Write(ctx, data)
+}
+
+func (p *PgxStore) CardRead(ctx context.Context, userID, name string) (res storage.CardData, err error) {
+	err = p.readFirstByName(ctx, &res, userID, name)
+	return
+}
+
+func (p *PgxStore) CardDelete(ctx context.Context, userID, name string) (err error) {
+	err = p.deleteByName(ctx, "cards", userID, name)
+	return
+}
+
+// Notes //
+
 func (p *PgxStore) NoteList(ctx context.Context, userID string) ([]string, error) {
 	return p.namesList(ctx, "notes", userID)
 }
+
+func (p *PgxStore) NoteWrite(ctx context.Context, data storage.NoteData) error {
+	return p.Write(ctx, data)
+}
+
+func (p *PgxStore) NoteRead(ctx context.Context, userID, name string) (res storage.NoteData, err error) {
+	err = p.readFirstByName(ctx, &res, userID, name)
+	return
+}
+
+func (p *PgxStore) NoteDelete(ctx context.Context, userID, name string) (err error) {
+	err = p.deleteByName(ctx, "notes", userID, name)
+	return
+}
+
+//
 
 func (p *PgxStore) Write(ctx context.Context, data any) error {
 	tx, err := p.db.BeginTxx(ctx, nil)
@@ -189,6 +244,10 @@ func (p *PgxStore) Write(ctx context.Context, data any) error {
 		query = writeQuery["users"]
 	case storage.PasswordData:
 		query = writeQuery["passwords"]
+	case storage.CardData:
+		query = writeQuery["cards"]
+	case storage.NoteData:
+		query = writeQuery["notes"]
 	default:
 		return errUnkmownDataType
 	}
@@ -212,6 +271,10 @@ func (p *PgxStore) Update(ctx context.Context, data any) error {
 		query = updateQuery["users"]
 	case storage.PasswordData:
 		query = updateQuery["passwords"]
+	case storage.CardData:
+		query = updateQuery["cards"]
+	case storage.NoteData:
+		query = updateQuery["notes"]
 	default:
 		return errUnkmownDataType
 	}
@@ -222,21 +285,55 @@ func (p *PgxStore) Update(ctx context.Context, data any) error {
 	return tx.Commit()
 }
 
-func (p *PgxStore) ReadByName(ctx context.Context, tabname storage.TableName, userID, name string) (any, error) {
-	var res any
+func (p *PgxStore) deleteByName(ctx context.Context, tabname, userId, name string) error {
+	tx, err := p.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
 
-	switch tabname {
-	case "passwords":
-		res = storage.PasswordData{}
+	query := `DELETE FROM ` + tabname +
+		` WHERE user_id=$1 AND name=$2;`
+
+	if _, err = tx.ExecContext(ctx, query, userId, name); err != nil {
+		return errNoContent(err)
+	}
+	return tx.Commit()
+}
+
+func (p *PgxStore) namesList(ctx context.Context, tabname, userID string) ([]string, error) {
+	query := `SELECT name FROM ` + tabname +
+		` WHERE user_id = $1`
+
+	res := make([]string, 0)
+	err := p.db.SelectContext(ctx, &res, query, userID)
+
+	if err != nil {
+		err = errNoContent(err)
+		return nil, err
+	}
+	return res, nil
+}
+
+func (p *PgxStore) readFirstByName(ctx context.Context, res any, userID, name string) error {
+	var tabname string
+
+	switch res.(type) {
+	case *storage.CardData:
+		tabname = "cards"
+	case *storage.NoteData:
+		tabname = "notes"
+	case *storage.PasswordData:
+		tabname = "passwords"
 	default:
-		return nil, errUnkmownDataType
+		return errUnkmownDataType
 	}
 
-	query := `SELECT * FROM ` + string(tabname) +
+	query := `SELECT * FROM ` + tabname +
 		` WHERE user_id = $1 AND name = $2 LIMIT 1`
 
-	err := p.db.GetContext(ctx, &res, query, userID, name)
-	return res, errNoContent(err)
+	err := p.db.GetContext(ctx, res, query, userID, name)
+	return errNoContent(err)
 }
 
 // При первом запуске база может быть пустая

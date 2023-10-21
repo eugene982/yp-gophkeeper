@@ -42,7 +42,7 @@ func NewGRPCListHandler(g CardListGetter, getUserID handler.GetUserIDFunc) GRPCL
 				return nil, status.Error(codes.NotFound, err.Error())
 			}
 
-			logger.Errorf("read password list error: %w", err)
+			logger.Errorf("read card list error: %w", err)
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 		return &resp, nil

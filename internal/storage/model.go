@@ -24,3 +24,16 @@ type PasswordData struct {
 	Password string `db:"password"`
 	Notes    string `db:"notes"`
 }
+
+type CardData struct {
+	UserID string `db:"user_id"`
+	Name   string `db:"name"`
+	Number string `db:"number"`
+	Notes  string `db:"notes"`
+}
+
+type NoteData struct {
+	UserID string `db:"user_id"`
+	Name   string `db:"name"`
+	Notes  string `db:"notes"`
+}

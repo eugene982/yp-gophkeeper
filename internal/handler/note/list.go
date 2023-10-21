@@ -14,12 +14,12 @@ import (
 )
 
 type NoteListGetter interface {
-	CardList(ctx context.Context, userID string) ([]string, error)
+	NoteList(ctx context.Context, userID string) ([]string, error)
 }
 
 type NoteListGetterFunc func(ctx context.Context, userID string) ([]string, error)
 
-func (f NoteListGetterFunc) CardList(ctx context.Context, userID string) ([]string, error) {
+func (f NoteListGetterFunc) NoteList(ctx context.Context, userID string) ([]string, error) {
 	return f(ctx, userID)
 }
 
@@ -37,13 +37,13 @@ func NewGRPCListHandler(g NoteListGetter, getUserID handler.GetUserIDFunc) GRPCL
 		}
 
 		var resp pb.NoteListResponse
-		resp.Names, err = g.CardList(ctx, userID)
+		resp.Names, err = g.NoteList(ctx, userID)
 		if err != nil {
 			if errors.Is(err, storage.ErrNoContent) {
 				return nil, status.Error(codes.NotFound, err.Error())
 			}
 
-			logger.Errorf("read password list error: %w", err)
+			logger.Errorf("read notes list error: %w", err)
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 		return &resp, nil
