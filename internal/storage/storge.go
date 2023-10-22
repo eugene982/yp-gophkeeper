@@ -66,6 +66,7 @@ type Storage interface {
 	PasswordRead(ctx context.Context, userID, name string) (PasswordData, error)
 	PasswordWrite(ctx context.Context, data PasswordData) error
 	PasswordDelete(ctx context.Context, userID, name string) error
+	PasswordUpdate(ctx context.Context, data PasswordData) error
 
 	// Card
 	CardList(ctx context.Context, userID string) ([]string, error)

@@ -23,6 +23,7 @@ const (
 		);
 
 		CREATE TABLE IF NOT EXISTS passwords (
+			id          SERIAL       PRIMARY KEY,
 			user_id     VARCHAR(64)  NOT NULL,
 			name	    VARCHAR(128) NOT NULL,			
 			username    VARCHAR(128) NOT NULL,
@@ -36,6 +37,7 @@ const (
 
 
 		CREATE TABLE IF NOT EXISTS notes (
+			id      SERIAL       PRIMARY KEY,
 			user_id VARCHAR(64)  NOT NULL,
 			name	VARCHAR(128) NOT NULL,
 			notes   TEXT         NOT NULL
@@ -46,6 +48,7 @@ const (
 		ON notes (user_id, name);	
 		
 		CREATE TABLE IF NOT EXISTS cards (
+			id      SERIAL       PRIMARY KEY,
 			user_id VARCHAR(64)  NOT NULL,
 			name	VARCHAR(128) NOT NULL,
 			number	VARCHAR(20)  NOT NULL,
@@ -75,7 +78,7 @@ var (
 		VALUES(:user_id, :name, :number, :notes);`,
 
 		// Заметки
-		"notes": `INSERT INTO cards (user_id, name, notes)
+		"notes": `INSERT INTO notes (user_id, name, notes)
 		VALUES(:user_id, :name, :notes);`,
 	}
 
@@ -86,15 +89,15 @@ var (
 
 		"passwords": `UPDATE passwords 
 		SET user_id=:user_id, name=:name, username=:username, password=:password, notes=:notes  
-		WHERE user_id=:user_id AND name=:name;`,
+		WHERE id=:id;`,
 
 		"cards": `UPDATE cards 
 		SET user_id=:user_id, name=:name, number=:number, notes=:notes  
-		WHERE user_id=:user_id AND name=:name;`,
+		WHERE id=:id;`,
 
 		"notes": `UPDATE notes 
 		SET user_id=:user_id, name=:name, notes=:notes  
-		WHERE user_id=:user_id AND name=:name;`,
+		WHERE id=:id;`,
 	}
 )
 
@@ -184,9 +187,12 @@ func (p *PgxStore) PasswordRead(ctx context.Context, userID, name string) (res s
 	return
 }
 
-func (p *PgxStore) PasswordDelete(ctx context.Context, userID, name string) (err error) {
-	err = p.deleteByName(ctx, "passwords", userID, name)
-	return
+func (p *PgxStore) PasswordDelete(ctx context.Context, userID, name string) error {
+	return p.deleteByName(ctx, "passwords", userID, name)
+}
+
+func (p *PgxStore) PasswordUpdate(ctx context.Context, data storage.PasswordData) error {
+	return p.Update(ctx, data)
 }
 
 // Cards //
@@ -280,7 +286,7 @@ func (p *PgxStore) Update(ctx context.Context, data any) error {
 	}
 
 	if _, err = tx.NamedExecContext(ctx, query, data); err != nil {
-		return errWriteConflict(err)
+		return errNoContent(errWriteConflict(err))
 	}
 	return tx.Commit()
 }

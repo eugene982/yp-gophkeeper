@@ -34,7 +34,7 @@ func NewGRPCWriteHandler(w PasswordWritter, getUserID handler.GetUserIDFunc) GRP
 			return nil, err
 		}
 
-		err = w.PasswordWrite(ctx, fromPasswordWriteRequest(userID, in))
+		err = w.PasswordWrite(ctx, fromPasswordWriteRequest(userID, 0, in))
 		if err != nil {
 			if errors.Is(err, storage.ErrWriteConflict) {
 				return nil, status.Error(codes.AlreadyExists, err.Error())

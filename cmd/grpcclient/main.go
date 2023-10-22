@@ -43,6 +43,9 @@ var (
 		"login": loginCmd,
 
 		"new": newCmd,
+		"get": getCmd,
+		"del": delCmd,
+		"upd": updCmd,
 
 		"passwords":   passwordsCmd,
 		"lspasswords": lsPasswordCmd,
@@ -115,7 +118,7 @@ func run() error {
 			if err == io.EOF {
 				return nil
 			}
-			fmt.Fprintln(os.Stderr, "wrong command")
+			fmt.Fprintln(os.Stderr, "неверная команда")
 			cmd = "help"
 			continue
 		} else if len(args) == 0 {
@@ -137,7 +140,7 @@ func mainLop(cmd string, args []string) bool {
 
 	fn, ok := handlers[cmd]
 	if !ok {
-		fmt.Fprintln(os.Stderr, "wrong command")
+		fmt.Fprintln(os.Stderr, "неверная комманда: ", cmd)
 		helpCmd(nil)
 		return true
 	}
@@ -160,12 +163,22 @@ func prompt() {
 	}
 }
 
-func helpCmd([]string) error {
-	fmt.Println(`	"help"       - вывод справки по командам 
-	"quit" ("q") - выход из программы"
-	"ping"       - проверка соединение (пинг)
-	"reg"        - регистрация (создание) нового пользователя
-	"login"      - вход`)
+func helpCmd(args []string) error {
+	switch currTable {
+	case "passwords":
+		return helpPasswordCmd(args)
+	}
+
+	fmt.Println(`	
+	"help"              - вывод справки по командам 
+	"quit" ("q")        - выход из программы"
+	"ping"              - проверка соединение (пинг)
+	"reg" [user pass]   - регистрация (создание) нового пользователя
+	"login" [user pass] - вход
+	"passwords"         - управление хранилищем паролей
+	"cards"             - управление хранилищем карт
+	"notes"             - управление хранилищем заметок
+	`)
 	return nil
 }
 
@@ -178,19 +191,27 @@ func pingCmd([]string) error {
 	return nil
 }
 
-func regCmd([]string) error {
+func regCmd(args []string) (err error) {
 	var login, passwd string
 
-	fmt.Print("\tlogin:")
-	_, err := fmt.Scanln(&login)
-	if err != nil {
-		return err
+	if len(args) > 0 {
+		login = args[0]
+	} else {
+		fmt.Print("\tlogin:")
+		login, err = conReader.ReadLine()
+		if err != nil {
+			return err
+		}
 	}
 
-	fmt.Print("\tpassword:")
-	_, err = fmt.Scanln(&passwd)
-	if err != nil {
-		return err
+	if len(args) > 1 {
+		passwd = args[1]
+	} else {
+		fmt.Print("\tpassword:")
+		passwd, err = conReader.ReadLine()
+		if err != nil {
+			return err
+		}
 	}
 
 	req := pb.RegisterRequest{
@@ -210,7 +231,7 @@ func regCmd([]string) error {
 func loginCmd(args []string) (err error) {
 	var login, passwd string
 
-	if len(args) > 1 {
+	if len(args) > 0 {
 		login = args[0]
 	} else {
 		fmt.Print("\tlogin:")
@@ -220,7 +241,7 @@ func loginCmd(args []string) (err error) {
 		}
 	}
 
-	if len(args) > 2 {
+	if len(args) > 1 {
 		passwd = args[1]
 	} else {
 		fmt.Print("\tpassword:")
@@ -257,8 +278,8 @@ func lsCmd(args []string) error {
 		return nil
 	}
 
-	fmt.Println("\tNotes    :", resp.NotesCount)
-	fmt.Println("\tCards    :", resp.CardsCount)
+	fmt.Println("\t    Notes:", resp.NotesCount)
+	fmt.Println("\t    Cards:", resp.CardsCount)
 	fmt.Println("\tPasswords:", resp.PasswordsCount)
 
 	return nil
@@ -269,65 +290,31 @@ func newCmd(args []string) error {
 	case "passwords":
 		return newPasswordCmd(args)
 	}
+	return fmt.Errorf("выберите таблицу: passwords, cards, notes...")
+}
+
+func getCmd(args []string) error {
+	switch currTable {
+	case "passwords":
+		return getPasswordCmd(args)
+	}
+	return fmt.Errorf("выберите таблицу: passwords, cards, notes...")
+}
+
+func delCmd(args []string) error {
+	switch currTable {
+	case "passwords":
+		return delPasswordCmd(args)
+	}
+	return fmt.Errorf("выберите таблицу: passwords, cards, notes...")
+}
+
+func updCmd(args []string) error {
+	switch currTable {
+	case "passwords":
+		return updPasswordCmd(args)
+	}
 	return errors.New("выберите таблицу: passwords, cards, notes...")
-}
-
-func passwordsCmd([]string) error {
-	if userName == "" {
-		return errUnauthenticated
-	}
-	currTable = "passwords"
-	return nil
-}
-
-func lsPasswordCmd([]string) error {
-
-	ctx := withToken(context.Background())
-	resp, err := client.PasswordList(ctx, &empty.Empty{})
-	if err != nil {
-		return nil
-	}
-
-	fmt.Println("\tPasswords:", strings.Join(resp.Names, "; "))
-	fmt.Println("\tCount: ", len(resp.Names))
-
-	return nil
-}
-
-func newPasswordCmd([]string) (err error) {
-	var req pb.PasswordWriteRequest
-
-	fmt.Print("\tName:")
-	req.Name, err = conReader.ReadLine()
-	if err != nil {
-		return err
-	}
-
-	fmt.Print("\tUsername:")
-	req.Username, err = conReader.ReadLine()
-	if err != nil {
-		return err
-	}
-
-	fmt.Print("\tPassword:")
-	req.Password, err = conReader.ReadLine()
-	if err != nil {
-		return err
-	}
-
-	fmt.Print("\tNotes:")
-	req.Notes, err = conReader.ReadLine()
-	if err != nil {
-		return err
-	}
-
-	ctx := withToken(context.Background())
-	_, err = client.PasswordWrite(ctx, &req)
-	if err != nil {
-		return err
-	}
-	fmt.Println("\tOK")
-	return nil
 }
 
 func lsCardCmd([]string) error {
@@ -339,7 +326,7 @@ func lsCardCmd([]string) error {
 	}
 
 	fmt.Println("\tCards:", strings.Join(resp.Names, "; "))
-	fmt.Println("\tCount: ", len(resp.Names))
+	fmt.Println("\tCount:", len(resp.Names))
 
 	return nil
 }
@@ -353,7 +340,7 @@ func lsNoteCmd([]string) error {
 	}
 
 	fmt.Println("\tNotes:", strings.Join(resp.Names, "; "))
-	fmt.Println("\tCount: ", len(resp.Names))
+	fmt.Println("\tCount:", len(resp.Names))
 
 	return nil
 }

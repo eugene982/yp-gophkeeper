@@ -18,6 +18,7 @@ type ListData struct {
 
 // PasswordData хранимая информация о паролях
 type PasswordData struct {
+	ID       int32  `db:"id"`
 	UserID   string `db:"user_id"`
 	Name     string `db:"name"`
 	Username string `db:"username"`
@@ -26,6 +27,7 @@ type PasswordData struct {
 }
 
 type CardData struct {
+	ID     int32  `db:"id"`
 	UserID string `db:"user_id"`
 	Name   string `db:"name"`
 	Number string `db:"number"`
@@ -33,6 +35,7 @@ type CardData struct {
 }
 
 type NoteData struct {
+	ID     int32  `db:"id"`
 	UserID string `db:"user_id"`
 	Name   string `db:"name"`
 	Notes  string `db:"notes"`

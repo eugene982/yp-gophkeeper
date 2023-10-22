@@ -119,10 +119,11 @@ message PasswordReadRequest {
 }
 
 message PasswordReadResponse {
-    string name     = 1;
-    string username = 2;
-    string password = 3;
-    string notes    = 4;
+    int32  id       = 1;
+    string name     = 2;
+    string username = 3;
+    string password = 4;
+    string notes    = 5;
 }
 
 message PasswordWriteRequest {
@@ -137,7 +138,7 @@ message PasswordDelRequest {
 }
 
 message PasswordUpdateRequest {
-    PasswordDelRequest delete  = 1;
+    int32 id = 1;
     PasswordWriteRequest write = 2; 
 }
 
@@ -152,9 +153,10 @@ message CardReadRequest {
 }
 
 message CardReadResponse {
-    string name   = 1;
-    string number = 2;
-    string notes  = 3;
+    int32  id     = 1;
+    string name   = 2;
+    string number = 3;
+    string notes  = 4;
 }
 
 message CardWriteRequest {
@@ -168,7 +170,7 @@ message CardDelRequest {
 }
 
 message CardUpdateRequest {
-    CardDelRequest delete  = 1;
+    int32 id = 1;
     CardWriteRequest write = 2; 
 }
 
@@ -183,13 +185,14 @@ message NoteReadRequest {
 }
 
 message NoteReadResponse {
-    string name  = 1;
-    string notes = 2;
+    int32  id    = 1;
+    string name  = 2;
+    string notes = 3;
 }
 
 message NoteWriteRequest {
-    string name   = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
-    string notes  = 2[(buf.validate.field).string.min_len = 1];
+    string name  = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
+    string notes = 2[(buf.validate.field).string.min_len = 1];
 }
 
 message NoteDelRequest {
@@ -197,6 +200,6 @@ message NoteDelRequest {
 }
 
 message NoteUpdateRequest {
-    NoteDelRequest delete  = 1;
+    int32 id = 1;
     NoteWriteRequest write = 2; 
 }
