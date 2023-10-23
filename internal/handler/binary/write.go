@@ -1,4 +1,4 @@
-package note
+package binary
 
 import (
 	"context"
@@ -16,25 +16,25 @@ import (
 	crypt "github.com/eugene982/yp-gophkeeper/internal/crypto"
 )
 
-type NoteWritter interface {
-	NoteWrite(ctx context.Context, data storage.NoteData) error
+type BinaryWritter interface {
+	BinaryWrite(ctx context.Context, data storage.BinaryData) error
 }
 
-type NoteWritterFunc func(ctx context.Context, data storage.NoteData) error
+type BinaryWritterFunc func(ctx context.Context, data storage.BinaryData) error
 
-func (f NoteWritterFunc) NoteWrite(ctx context.Context, data storage.NoteData) error {
+func (f BinaryWritterFunc) BinaryWrite(ctx context.Context, data storage.BinaryData) error {
 	return f(ctx, data)
 }
 
-var _ NoteWritter = NoteWritterFunc(nil)
+var _ BinaryWritter = BinaryWritterFunc(nil)
 
-type GRPCWriteHandler func(ctx context.Context, in *pb.NoteWriteRequest) (*empty.Empty, error)
+type GRPCWriteHandler func(ctx context.Context, in *pb.BinaryWriteRequest) (*empty.Empty, error)
 
-func NewGRPCWriteHandler(w NoteWritter, getUserID handler.GetUserIDFunc, enc crypt.Encryptor) GRPCWriteHandler {
-	return func(ctx context.Context, in *pb.NoteWriteRequest) (*empty.Empty, error) {
+func NewGRPCWriteHandler(w BinaryWritter, getUserID handler.GetUserIDFunc, enc crypt.Encryptor) GRPCWriteHandler {
+	return func(ctx context.Context, in *pb.BinaryWriteRequest) (*empty.Empty, error) {
 		var err error
 
-		write := storage.NoteData{
+		write := storage.BinaryData{
 			Name: in.Name,
 		}
 
@@ -43,13 +43,19 @@ func NewGRPCWriteHandler(w NoteWritter, getUserID handler.GetUserIDFunc, enc cry
 			return nil, err
 		}
 
+		write.Bin, err = enc.Encrypt(in.Bin)
+		if err != nil {
+			logger.Errorf("encrypt bin error: %w", err)
+			return nil, status.Error(codes.Internal, err.Error())
+		}
+
 		write.Notes, err = enc.Encrypt([]byte(in.Notes))
 		if err != nil {
 			logger.Errorf("encrypt notes error: %w", err)
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		err = w.NoteWrite(ctx, write)
+		err = w.BinaryWrite(ctx, write)
 		if err != nil {
 			if errors.Is(err, storage.ErrWriteConflict) {
 				return nil, status.Error(codes.AlreadyExists, err.Error())

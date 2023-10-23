@@ -21,22 +21,31 @@ type PasswordData struct {
 	ID       int32  `db:"id"`
 	UserID   string `db:"user_id"`
 	Name     string `db:"name"`
-	Username string `db:"username"`
-	Password string `db:"password"`
-	Notes    string `db:"notes"`
+	Username []byte `db:"username"`
+	Password []byte `db:"password"`
+	Notes    []byte `db:"notes"`
 }
 
 type CardData struct {
 	ID     int32  `db:"id"`
 	UserID string `db:"user_id"`
 	Name   string `db:"name"`
-	Number string `db:"number"`
-	Notes  string `db:"notes"`
+	Number []byte `db:"number"`
+	Pin    []byte `db:"pin"`
+	Notes  []byte `db:"notes"`
 }
 
 type NoteData struct {
 	ID     int32  `db:"id"`
 	UserID string `db:"user_id"`
 	Name   string `db:"name"`
-	Notes  string `db:"notes"`
+	Notes  []byte `db:"notes"`
+}
+
+type BinaryData struct {
+	ID     int32  `db:"id"`
+	UserID string `db:"user_id"`
+	Name   string `db:"name"`
+	Bin    []byte `db:"bin"`
+	Notes  []byte `db:"notes"`
 }

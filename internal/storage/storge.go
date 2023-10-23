@@ -73,10 +73,19 @@ type Storage interface {
 	CardRead(ctx context.Context, userID, name string) (CardData, error)
 	CardWrite(ctx context.Context, data CardData) error
 	CardDelete(ctx context.Context, userID, name string) error
+	CardUpdate(ctx context.Context, data CardData) error
 
 	// Notes
 	NoteList(ctx context.Context, userID string) ([]string, error)
 	NoteRead(ctx context.Context, userID, name string) (NoteData, error)
 	NoteWrite(ctx context.Context, data NoteData) error
 	NoteDelete(ctx context.Context, userID, name string) error
+	NoteUpdate(ctx context.Context, data NoteData) error
+
+	// Binary
+	BinaryList(ctx context.Context, userID string) ([]string, error)
+	BinaryRead(ctx context.Context, userID, name string) (BinaryData, error)
+	BinaryWrite(ctx context.Context, data BinaryData) error
+	BinaryDelete(ctx context.Context, userID, name string) error
+	BinaryUpdate(ctx context.Context, data BinaryData) error
 }

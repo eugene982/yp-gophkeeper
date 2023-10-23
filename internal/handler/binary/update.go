@@ -1,4 +1,4 @@
-package password
+package binary
 
 import (
 	"context"
@@ -16,25 +16,25 @@ import (
 	crypt "github.com/eugene982/yp-gophkeeper/internal/crypto"
 )
 
-type PasswordUpdater interface {
-	PasswordUpdate(ctx context.Context, data storage.PasswordData) error
+type BinaryUpdater interface {
+	BinaryUpdate(ctx context.Context, data storage.BinaryData) error
 }
 
-type PasswordUpdateFunc func(ctx context.Context, data storage.PasswordData) error
+type BinaryUpdateFunc func(ctx context.Context, data storage.BinaryData) error
 
-func (f PasswordUpdateFunc) PasswordUpdate(ctx context.Context, data storage.PasswordData) error {
+func (f BinaryUpdateFunc) BinaryUpdate(ctx context.Context, data storage.BinaryData) error {
 	return f(ctx, data)
 }
 
-var _ PasswordUpdater = PasswordUpdateFunc(nil)
+var _ BinaryUpdater = BinaryUpdateFunc(nil)
 
-type GRPCUpdateHandler func(context.Context, *pb.PasswordUpdateRequest) (*empty.Empty, error)
+type GRPCUpdateHandler func(context.Context, *pb.BinaryUpdateRequest) (*empty.Empty, error)
 
-func NewGRPCUpdateHandler(u PasswordUpdater, getUserID handler.GetUserIDFunc, enc crypt.Encryptor) GRPCUpdateHandler {
-	return func(ctx context.Context, in *pb.PasswordUpdateRequest) (*empty.Empty, error) {
+func NewGRPCUpdateHandler(u BinaryUpdater, getUserID handler.GetUserIDFunc, enc crypt.Encryptor) GRPCUpdateHandler {
+	return func(ctx context.Context, in *pb.BinaryUpdateRequest) (*empty.Empty, error) {
 		var err error
 
-		upd := storage.PasswordData{
+		upd := storage.BinaryData{
 			ID:   in.Id,
 			Name: in.Write.Name,
 		}
@@ -44,15 +44,9 @@ func NewGRPCUpdateHandler(u PasswordUpdater, getUserID handler.GetUserIDFunc, en
 			return nil, err
 		}
 
-		upd.Username, err = enc.Encrypt([]byte(in.Write.Username))
+		upd.Bin, err = enc.Encrypt(in.Write.Bin)
 		if err != nil {
-			logger.Errorf("encrypt username error: %w", err)
-			return nil, status.Error(codes.Internal, err.Error())
-		}
-
-		upd.Password, err = enc.Encrypt([]byte(in.Write.Password))
-		if err != nil {
-			logger.Errorf("encrypt password error: %w", err)
+			logger.Errorf("encrypt bin error: %w", err)
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
@@ -62,7 +56,7 @@ func NewGRPCUpdateHandler(u PasswordUpdater, getUserID handler.GetUserIDFunc, en
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		err = u.PasswordUpdate(ctx, upd)
+		err = u.BinaryUpdate(ctx, upd)
 		if err != nil {
 			if errors.Is(err, storage.ErrWriteConflict) {
 				return nil, status.Error(codes.AlreadyExists, err.Error())

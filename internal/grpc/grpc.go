@@ -12,6 +12,7 @@ import (
 
 	pb "github.com/eugene982/yp-gophkeeper/gen/go/proto/v1"
 	"github.com/eugene982/yp-gophkeeper/internal/handler"
+	"github.com/eugene982/yp-gophkeeper/internal/handler/binary"
 	"github.com/eugene982/yp-gophkeeper/internal/handler/card"
 	"github.com/eugene982/yp-gophkeeper/internal/handler/list"
 	"github.com/eugene982/yp-gophkeeper/internal/handler/login"
@@ -20,12 +21,15 @@ import (
 	"github.com/eugene982/yp-gophkeeper/internal/handler/ping"
 	"github.com/eugene982/yp-gophkeeper/internal/handler/register"
 	"github.com/eugene982/yp-gophkeeper/internal/storage"
+
+	crypt "github.com/eugene982/yp-gophkeeper/internal/crypto"
 )
 
 var (
 	TOKEN_SECRET_KEY = "sekret=key"
 	TOKEN_EXP        = time.Hour
 	PASSWORD_SALT    = "password=salt"
+	CRYPTO_KEY       = []byte("GopherKeeperKey!") // 16, 24, 34 байта
 )
 
 type GRPCServer struct {
@@ -48,13 +52,28 @@ type GRPCServer struct {
 	passwdUpdateHandler password.GRPCUpdateHandler
 
 	// cards
-	cardListHandler card.GRPCListHandler
+	cardListHandler   card.GRPCListHandler
+	cardWriteHandler  card.GRPCWriteHandler
+	cardReadHandler   card.GRPCReadHandler
+	cardDeleteHandler card.GRPCDeleteHandler
+	cardUpdateHandler card.GRPCUpdateHandler
 
 	// notes
-	noteListHandler note.GRPCListHandler
+	noteListHandler   note.GRPCListHandler
+	noteWriteHandler  note.GRPCWriteHandler
+	noteReadHandler   note.GRPCReadHandler
+	noteDeleteHandler note.GRPCDeleteHandler
+	noteUpdateHandler note.GRPCUpdateHandler
+
+	// binary
+	binaryListHandler   binary.GRPCListHandler
+	binaryWriteHandler  binary.GRPCWriteHandler
+	binaryReadHandler   binary.GRPCReadHandler
+	binaryDeleteHandler binary.GRPCDeleteHandler
+	binaryUpdateHandler binary.GRPCUpdateHandler
 }
 
-func NewServer(store storage.Storage, addr string) (*GRPCServer, error) {
+func NewServer(store storage.Storage, crypt crypt.EncryptDecryptor, addr string) (*GRPCServer, error) {
 	var (
 		srv GRPCServer
 		err error
@@ -106,16 +125,31 @@ func NewServer(store storage.Storage, addr string) (*GRPCServer, error) {
 
 	// Password
 	srv.passwdListHandler = password.NewGRPCListHandler(store, getUserID)
-	srv.passwdWriteHandler = password.NewGRPCWriteHandler(store, getUserID)
-	srv.passwdReadHandler = password.NewGRPCReadHandler(store, getUserID)
+	srv.passwdWriteHandler = password.NewGRPCWriteHandler(store, getUserID, crypt)
+	srv.passwdReadHandler = password.NewGRPCReadHandler(store, getUserID, crypt)
 	srv.passwdDeleteHandler = password.NewGRPCDeleteHandler(store, getUserID)
-	srv.passwdUpdateHandler = password.NewGRPCUpdateHandler(store, getUserID)
+	srv.passwdUpdateHandler = password.NewGRPCUpdateHandler(store, getUserID, crypt)
 
 	// Payment card
 	srv.cardListHandler = card.NewGRPCListHandler(store, getUserID)
+	srv.cardWriteHandler = card.NewGRPCWriteHandler(store, getUserID, crypt)
+	srv.cardReadHandler = card.NewGRPCReadHandler(store, getUserID, crypt)
+	srv.cardDeleteHandler = card.NewGRPCDeleteHandler(store, getUserID)
+	srv.cardUpdateHandler = card.NewGRPCUpdateHandler(store, getUserID, crypt)
 
 	// Notes
 	srv.noteListHandler = note.NewGRPCListHandler(store, getUserID)
+	srv.noteWriteHandler = note.NewGRPCWriteHandler(store, getUserID, crypt)
+	srv.noteReadHandler = note.NewGRPCReadHandler(store, getUserID, crypt)
+	srv.noteDeleteHandler = note.NewGRPCDeleteHandler(store, getUserID)
+	srv.noteUpdateHandler = note.NewGRPCUpdateHandler(store, getUserID, crypt)
+
+	// binary
+	srv.binaryListHandler = binary.NewGRPCListHandler(store, getUserID)
+	srv.binaryWriteHandler = binary.NewGRPCWriteHandler(store, getUserID, crypt)
+	srv.binaryReadHandler = binary.NewGRPCReadHandler(store, getUserID, crypt)
+	srv.binaryDeleteHandler = binary.NewGRPCDeleteHandler(store, getUserID)
+	srv.binaryUpdateHandler = binary.NewGRPCUpdateHandler(store, getUserID, crypt)
 
 	// регистрируем сервис
 	pb.RegisterGophKeeperServer(srv.server, srv)

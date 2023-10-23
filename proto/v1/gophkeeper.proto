@@ -59,17 +59,34 @@ service GophKeeper {
     // NoteList - список
     rpc NoteList(google.protobuf.Empty) returns (NoteListResponse);
     
-    // CardWrite запись нового
+    // NoteWrite запись нового
     rpc NoteWrite(NoteWriteRequest) returns (google.protobuf.Empty);
 
-    // CardUpdate обновление
+    // NoteUpdate обновление
     rpc NoteUpdate(NoteUpdateRequest) returns (google.protobuf.Empty);
 
-    // CardRead чтение
+    // NoteRead чтение
     rpc NoteRead(NoteReadRequest) returns (NoteReadResponse);
     
-    // CardDelete удаление
+    // NoteDelete удаление
     rpc NoteDelete(NoteDelRequest) returns (google.protobuf.Empty);
+
+    // Binary
+
+    // BinaryList - список
+    rpc BinaryList(google.protobuf.Empty) returns (BinaryListResponse);
+    
+    // BinaryWrite запись нового
+    rpc BinaryWrite(BinaryWriteRequest) returns (google.protobuf.Empty);
+
+    // BinaryUpdate обновление
+    rpc BinaryUpdate(BinaryUpdateRequest) returns (google.protobuf.Empty);
+
+    // BinaryRead чтение
+    rpc BinaryRead(BinaryReadRequest) returns (BinaryReadResponse);
+    
+    // BinaryDelete удаление
+    rpc BinaryDelete(BinaryDelRequest) returns (google.protobuf.Empty);
 
 }
 
@@ -156,13 +173,15 @@ message CardReadResponse {
     int32  id     = 1;
     string name   = 2;
     string number = 3;
-    string notes  = 4;
+    string pin    = 4;
+    string notes  = 5;
 }
 
 message CardWriteRequest {
     string name   = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
     string number = 2[(buf.validate.field).string.max_len = 20];
-    string notes  = 3;
+    string pin    = 3[(buf.validate.field).string.max_len = 10];
+    string notes  = 4;
 }
 
 message CardDelRequest {
@@ -202,4 +221,36 @@ message NoteDelRequest {
 message NoteUpdateRequest {
     int32 id = 1;
     NoteWriteRequest write = 2; 
+}
+
+// Binary
+
+message BinaryListResponse {
+    repeated string names = 1;  // массив наименований  
+}
+
+message BinaryReadRequest {
+    string name = 1[(buf.validate.field).string.min_len = 1];
+}
+
+message BinaryReadResponse {
+    int32  id    = 1;
+    string name  = 2;
+    bytes  bin   = 3;
+    string notes = 4;
+}
+
+message BinaryWriteRequest {
+    string name  = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
+    bytes  bin   = 2[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 5000000];
+    string notes = 3[(buf.validate.field).string.min_len = 1];
+}
+
+message BinaryDelRequest {
+    string name = 1[(buf.validate.field).string.min_len = 1];
+}
+
+message BinaryUpdateRequest {
+    int32 id = 1;
+    BinaryWriteRequest write = 2; 
 }

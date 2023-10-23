@@ -39,6 +39,11 @@ const (
 	GophKeeper_NoteUpdate_FullMethodName     = "/gophermart.v1.GophKeeper/NoteUpdate"
 	GophKeeper_NoteRead_FullMethodName       = "/gophermart.v1.GophKeeper/NoteRead"
 	GophKeeper_NoteDelete_FullMethodName     = "/gophermart.v1.GophKeeper/NoteDelete"
+	GophKeeper_BinaryList_FullMethodName     = "/gophermart.v1.GophKeeper/BinaryList"
+	GophKeeper_BinaryWrite_FullMethodName    = "/gophermart.v1.GophKeeper/BinaryWrite"
+	GophKeeper_BinaryUpdate_FullMethodName   = "/gophermart.v1.GophKeeper/BinaryUpdate"
+	GophKeeper_BinaryRead_FullMethodName     = "/gophermart.v1.GophKeeper/BinaryRead"
+	GophKeeper_BinaryDelete_FullMethodName   = "/gophermart.v1.GophKeeper/BinaryDelete"
 )
 
 // GophKeeperClient is the client API for GophKeeper service.
@@ -75,14 +80,24 @@ type GophKeeperClient interface {
 	CardDelete(ctx context.Context, in *CardDelRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	// NoteList - список
 	NoteList(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*NoteListResponse, error)
-	// CardWrite запись нового
+	// NoteWrite запись нового
 	NoteWrite(ctx context.Context, in *NoteWriteRequest, opts ...grpc.CallOption) (*empty.Empty, error)
-	// CardUpdate обновление
+	// NoteUpdate обновление
 	NoteUpdate(ctx context.Context, in *NoteUpdateRequest, opts ...grpc.CallOption) (*empty.Empty, error)
-	// CardRead чтение
+	// NoteRead чтение
 	NoteRead(ctx context.Context, in *NoteReadRequest, opts ...grpc.CallOption) (*NoteReadResponse, error)
-	// CardDelete удаление
+	// NoteDelete удаление
 	NoteDelete(ctx context.Context, in *NoteDelRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	// BinaryList - список
+	BinaryList(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*BinaryListResponse, error)
+	// BinaryWrite запись нового
+	BinaryWrite(ctx context.Context, in *BinaryWriteRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	// BinaryUpdate обновление
+	BinaryUpdate(ctx context.Context, in *BinaryUpdateRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	// BinaryRead чтение
+	BinaryRead(ctx context.Context, in *BinaryReadRequest, opts ...grpc.CallOption) (*BinaryReadResponse, error)
+	// BinaryDelete удаление
+	BinaryDelete(ctx context.Context, in *BinaryDelRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 }
 
 type gophKeeperClient struct {
@@ -264,6 +279,51 @@ func (c *gophKeeperClient) NoteDelete(ctx context.Context, in *NoteDelRequest, o
 	return out, nil
 }
 
+func (c *gophKeeperClient) BinaryList(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*BinaryListResponse, error) {
+	out := new(BinaryListResponse)
+	err := c.cc.Invoke(ctx, GophKeeper_BinaryList_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gophKeeperClient) BinaryWrite(ctx context.Context, in *BinaryWriteRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, GophKeeper_BinaryWrite_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gophKeeperClient) BinaryUpdate(ctx context.Context, in *BinaryUpdateRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, GophKeeper_BinaryUpdate_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gophKeeperClient) BinaryRead(ctx context.Context, in *BinaryReadRequest, opts ...grpc.CallOption) (*BinaryReadResponse, error) {
+	out := new(BinaryReadResponse)
+	err := c.cc.Invoke(ctx, GophKeeper_BinaryRead_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *gophKeeperClient) BinaryDelete(ctx context.Context, in *BinaryDelRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, GophKeeper_BinaryDelete_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // GophKeeperServer is the server API for GophKeeper service.
 // All implementations must embed UnimplementedGophKeeperServer
 // for forward compatibility
@@ -298,14 +358,24 @@ type GophKeeperServer interface {
 	CardDelete(context.Context, *CardDelRequest) (*empty.Empty, error)
 	// NoteList - список
 	NoteList(context.Context, *empty.Empty) (*NoteListResponse, error)
-	// CardWrite запись нового
+	// NoteWrite запись нового
 	NoteWrite(context.Context, *NoteWriteRequest) (*empty.Empty, error)
-	// CardUpdate обновление
+	// NoteUpdate обновление
 	NoteUpdate(context.Context, *NoteUpdateRequest) (*empty.Empty, error)
-	// CardRead чтение
+	// NoteRead чтение
 	NoteRead(context.Context, *NoteReadRequest) (*NoteReadResponse, error)
-	// CardDelete удаление
+	// NoteDelete удаление
 	NoteDelete(context.Context, *NoteDelRequest) (*empty.Empty, error)
+	// BinaryList - список
+	BinaryList(context.Context, *empty.Empty) (*BinaryListResponse, error)
+	// BinaryWrite запись нового
+	BinaryWrite(context.Context, *BinaryWriteRequest) (*empty.Empty, error)
+	// BinaryUpdate обновление
+	BinaryUpdate(context.Context, *BinaryUpdateRequest) (*empty.Empty, error)
+	// BinaryRead чтение
+	BinaryRead(context.Context, *BinaryReadRequest) (*BinaryReadResponse, error)
+	// BinaryDelete удаление
+	BinaryDelete(context.Context, *BinaryDelRequest) (*empty.Empty, error)
 	mustEmbedUnimplementedGophKeeperServer()
 }
 
@@ -369,6 +439,21 @@ func (UnimplementedGophKeeperServer) NoteRead(context.Context, *NoteReadRequest)
 }
 func (UnimplementedGophKeeperServer) NoteDelete(context.Context, *NoteDelRequest) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NoteDelete not implemented")
+}
+func (UnimplementedGophKeeperServer) BinaryList(context.Context, *empty.Empty) (*BinaryListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BinaryList not implemented")
+}
+func (UnimplementedGophKeeperServer) BinaryWrite(context.Context, *BinaryWriteRequest) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BinaryWrite not implemented")
+}
+func (UnimplementedGophKeeperServer) BinaryUpdate(context.Context, *BinaryUpdateRequest) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BinaryUpdate not implemented")
+}
+func (UnimplementedGophKeeperServer) BinaryRead(context.Context, *BinaryReadRequest) (*BinaryReadResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BinaryRead not implemented")
+}
+func (UnimplementedGophKeeperServer) BinaryDelete(context.Context, *BinaryDelRequest) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BinaryDelete not implemented")
 }
 func (UnimplementedGophKeeperServer) mustEmbedUnimplementedGophKeeperServer() {}
 
@@ -725,6 +810,96 @@ func _GophKeeper_NoteDelete_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GophKeeper_BinaryList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GophKeeperServer).BinaryList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GophKeeper_BinaryList_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GophKeeperServer).BinaryList(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GophKeeper_BinaryWrite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BinaryWriteRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GophKeeperServer).BinaryWrite(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GophKeeper_BinaryWrite_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GophKeeperServer).BinaryWrite(ctx, req.(*BinaryWriteRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GophKeeper_BinaryUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BinaryUpdateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GophKeeperServer).BinaryUpdate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GophKeeper_BinaryUpdate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GophKeeperServer).BinaryUpdate(ctx, req.(*BinaryUpdateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GophKeeper_BinaryRead_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BinaryReadRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GophKeeperServer).BinaryRead(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GophKeeper_BinaryRead_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GophKeeperServer).BinaryRead(ctx, req.(*BinaryReadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _GophKeeper_BinaryDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BinaryDelRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(GophKeeperServer).BinaryDelete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: GophKeeper_BinaryDelete_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GophKeeperServer).BinaryDelete(ctx, req.(*BinaryDelRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // GophKeeper_ServiceDesc is the grpc.ServiceDesc for GophKeeper service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -807,6 +982,26 @@ var GophKeeper_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "NoteDelete",
 			Handler:    _GophKeeper_NoteDelete_Handler,
+		},
+		{
+			MethodName: "BinaryList",
+			Handler:    _GophKeeper_BinaryList_Handler,
+		},
+		{
+			MethodName: "BinaryWrite",
+			Handler:    _GophKeeper_BinaryWrite_Handler,
+		},
+		{
+			MethodName: "BinaryUpdate",
+			Handler:    _GophKeeper_BinaryUpdate_Handler,
+		},
+		{
+			MethodName: "BinaryRead",
+			Handler:    _GophKeeper_BinaryRead_Handler,
+		},
+		{
+			MethodName: "BinaryDelete",
+			Handler:    _GophKeeper_BinaryDelete_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -26,9 +26,9 @@ const (
 			id          SERIAL       PRIMARY KEY,
 			user_id     VARCHAR(64)  NOT NULL,
 			name	    VARCHAR(128) NOT NULL,			
-			username    VARCHAR(128) NOT NULL,
-			password    VARCHAR(128) NOT NULL,
-			notes       TEXT         NOT NULL
+			username    BYTEA        NOT NULL,
+			password    BYTEA        NOT NULL,
+			notes       BYTEA        NOT NULL
 		);
 		CREATE INDEX IF NOT EXISTS user_id_idx 
 		ON passwords (user_id);
@@ -40,7 +40,7 @@ const (
 			id      SERIAL       PRIMARY KEY,
 			user_id VARCHAR(64)  NOT NULL,
 			name	VARCHAR(128) NOT NULL,
-			notes   TEXT         NOT NULL
+			notes   BYTEA        NOT NULL
 		);
 		CREATE INDEX IF NOT EXISTS user_id_idx 
 		ON notes (user_id);
@@ -50,14 +50,27 @@ const (
 		CREATE TABLE IF NOT EXISTS cards (
 			id      SERIAL       PRIMARY KEY,
 			user_id VARCHAR(64)  NOT NULL,
-			name	VARCHAR(128) NOT NULL,
-			number	VARCHAR(20)  NOT NULL,
-			notes   TEXT         NOT NULL
+			name    VARCHAR(128) NOT NULL,
+			number  BYTEA		 NOT NULL,
+			pin     BYTEA        NOT NULL,	 
+			notes   BYTEA        NOT NULL
 		);
 		CREATE INDEX IF NOT EXISTS user_id_idx 
 		ON cards (user_id);
 		CREATE UNIQUE INDEX IF NOT EXISTS user_id_name_idx 
 		ON cards (user_id, name);
+
+		CREATE TABLE IF NOT EXISTS binaries (
+			id      SERIAL       PRIMARY KEY,
+			user_id VARCHAR(64)  NOT NULL,
+			name    VARCHAR(128) NOT NULL,
+			bin     BYTEA		 NOT NULL,
+			notes   BYTEA        NOT NULL
+		);
+		CREATE INDEX IF NOT EXISTS user_id_idx 
+		ON binaries (user_id);
+		CREATE UNIQUE INDEX IF NOT EXISTS user_id_name_idx 
+		ON binaries (user_id, name);
 		`
 )
 
@@ -66,20 +79,29 @@ var (
 
 	writeQuery = map[string]string{ // запросы записи в бд
 		// Пользователь
-		"users": `INSERT INTO users (user_id, passwd_hash)
+		"users": `INSERT INTO users 
+			(user_id, passwd_hash)
 		VALUES(:user_id, :passwd_hash);`,
 
 		// Пароль
-		"passwords": `INSERT INTO passwords (user_id, name, username, password, notes)
+		"passwords": `INSERT INTO passwords
+			(user_id, name, username, password, notes)
 		VALUES(:user_id, :name, :username, :password, :notes);`,
 
 		// Карточки
-		"cards": `INSERT INTO cards (user_id, name, number, notes)
-		VALUES(:user_id, :name, :number, :notes);`,
+		"cards": `INSERT INTO cards
+			(user_id, name, number, pin, notes)
+		VALUES(:user_id, :name, :number, :pin, :notes);`,
 
 		// Заметки
-		"notes": `INSERT INTO notes (user_id, name, notes)
+		"notes": `INSERT INTO notes
+			(user_id, name, notes)
 		VALUES(:user_id, :name, :notes);`,
+
+		// бинарники
+		"binaries": `INSERT INTO binaries
+			(user_id, name, bin, notes)
+		VALUES(:user_id, :name, :bin, :notes);`,
 	}
 
 	updateQuery = map[string]string{ // запросы на обновление данных
@@ -97,6 +119,10 @@ var (
 
 		"notes": `UPDATE notes 
 		SET user_id=:user_id, name=:name, notes=:notes  
+		WHERE id=:id;`,
+
+		"binaries": `UPDATE binaries 
+		SET user_id=:user_id, name=:name, bin=:bin, notes=:notes  
 		WHERE id=:id;`,
 	}
 )
@@ -215,6 +241,10 @@ func (p *PgxStore) CardDelete(ctx context.Context, userID, name string) (err err
 	return
 }
 
+func (p *PgxStore) CardUpdate(ctx context.Context, data storage.CardData) error {
+	return p.Update(ctx, data)
+}
+
 // Notes //
 
 func (p *PgxStore) NoteList(ctx context.Context, userID string) ([]string, error) {
@@ -233,6 +263,34 @@ func (p *PgxStore) NoteRead(ctx context.Context, userID, name string) (res stora
 func (p *PgxStore) NoteDelete(ctx context.Context, userID, name string) (err error) {
 	err = p.deleteByName(ctx, "notes", userID, name)
 	return
+}
+
+func (p *PgxStore) NoteUpdate(ctx context.Context, data storage.NoteData) error {
+	return p.Update(ctx, data)
+}
+
+// Binary //
+
+func (p *PgxStore) BinaryList(ctx context.Context, userID string) ([]string, error) {
+	return p.namesList(ctx, "binaries", userID)
+}
+
+func (p *PgxStore) BinaryWrite(ctx context.Context, data storage.BinaryData) error {
+	return p.Write(ctx, data)
+}
+
+func (p *PgxStore) BinaryRead(ctx context.Context, userID, name string) (res storage.BinaryData, err error) {
+	err = p.readFirstByName(ctx, &res, userID, name)
+	return
+}
+
+func (p *PgxStore) BinaryDelete(ctx context.Context, userID, name string) (err error) {
+	err = p.deleteByName(ctx, "binaries", userID, name)
+	return
+}
+
+func (p *PgxStore) BinaryUpdate(ctx context.Context, data storage.BinaryData) error {
+	return p.Update(ctx, data)
 }
 
 //

@@ -16,58 +16,60 @@ import (
 	crypt "github.com/eugene982/yp-gophkeeper/internal/crypto"
 )
 
-type CardWritter interface {
-	CardWrite(ctx context.Context, data storage.CardData) error
+type CardUpdater interface {
+	CardUpdate(ctx context.Context, data storage.CardData) error
 }
 
-type CardWritterFunc func(ctx context.Context, data storage.CardData) error
+type CardUpdateFunc func(ctx context.Context, data storage.CardData) error
 
-func (f CardWritterFunc) CardWrite(ctx context.Context, data storage.CardData) error {
+func (f CardUpdateFunc) CardUpdate(ctx context.Context, data storage.CardData) error {
 	return f(ctx, data)
 }
 
-var _ CardWritter = CardWritterFunc(nil)
+var _ CardUpdater = CardUpdateFunc(nil)
 
-type GRPCWriteHandler func(ctx context.Context, in *pb.CardWriteRequest) (*empty.Empty, error)
+type GRPCUpdateHandler func(context.Context, *pb.CardUpdateRequest) (*empty.Empty, error)
 
-func NewGRPCWriteHandler(w CardWritter, getUserID handler.GetUserIDFunc, enc crypt.Encryptor) GRPCWriteHandler {
-	return func(ctx context.Context, in *pb.CardWriteRequest) (*empty.Empty, error) {
+func NewGRPCUpdateHandler(u CardUpdater, getUserID handler.GetUserIDFunc, enc crypt.Encryptor) GRPCUpdateHandler {
+	return func(ctx context.Context, in *pb.CardUpdateRequest) (*empty.Empty, error) {
 		var err error
 
-		write := storage.CardData{
-			Name: in.Name,
+		upd := storage.CardData{
+			ID:   in.Id,
+			Name: in.Write.Name,
 		}
 
-		write.UserID, err = getUserID(ctx)
+		upd.UserID, err = getUserID(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		write.Number, err = enc.Encrypt([]byte(in.Number))
+		upd.Number, err = enc.Encrypt([]byte(in.Write.Number))
 		if err != nil {
 			logger.Errorf("encrypt number error: %w", err)
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		write.Pin, err = enc.Encrypt([]byte(in.Pin))
+		upd.Pin, err = enc.Encrypt([]byte(in.Write.Pin))
 		if err != nil {
 			logger.Errorf("encrypt pin error: %w", err)
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		write.Notes, err = enc.Encrypt([]byte(in.Notes))
+		upd.Notes, err = enc.Encrypt([]byte(in.Write.Notes))
 		if err != nil {
 			logger.Errorf("encrypt notes error: %w", err)
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		err = w.CardWrite(ctx, write)
+		err = u.CardUpdate(ctx, upd)
 		if err != nil {
 			if errors.Is(err, storage.ErrWriteConflict) {
 				return nil, status.Error(codes.AlreadyExists, err.Error())
 			}
-			logger.Errorf("write card error: %w", err)
-			return nil, status.Error(codes.Internal, err.Error())
+			if errors.Is(err, storage.ErrNoContent) {
+				return nil, status.Error(codes.NotFound, err.Error())
+			}
 		}
 
 		return &empty.Empty{}, nil
