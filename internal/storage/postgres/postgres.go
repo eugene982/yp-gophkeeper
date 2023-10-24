@@ -30,9 +30,9 @@ const (
 			password    BYTEA        NOT NULL,
 			notes       BYTEA        NOT NULL
 		);
-		CREATE INDEX IF NOT EXISTS user_id_idx 
+		CREATE INDEX IF NOT EXISTS passwords_user_id_idx 
 		ON passwords (user_id);
-		CREATE UNIQUE INDEX IF NOT EXISTS user_id_name_idx 
+		CREATE UNIQUE INDEX IF NOT EXISTS passwords_user_id_name_idx 
 		ON passwords (user_id, name);	
 
 
@@ -42,9 +42,9 @@ const (
 			name	VARCHAR(128) NOT NULL,
 			notes   BYTEA        NOT NULL
 		);
-		CREATE INDEX IF NOT EXISTS user_id_idx 
+		CREATE INDEX IF NOT EXISTS notes_user_id_idx 
 		ON notes (user_id);
-		CREATE UNIQUE INDEX IF NOT EXISTS user_id_name_idx 
+		CREATE UNIQUE INDEX IF NOT EXISTS notes_user_id_name_idx 
 		ON notes (user_id, name);	
 		
 		CREATE TABLE IF NOT EXISTS cards (
@@ -55,9 +55,9 @@ const (
 			pin     BYTEA        NOT NULL,	 
 			notes   BYTEA        NOT NULL
 		);
-		CREATE INDEX IF NOT EXISTS user_id_idx 
+		CREATE INDEX IF NOT EXISTS cards_user_id_idx 
 		ON cards (user_id);
-		CREATE UNIQUE INDEX IF NOT EXISTS user_id_name_idx 
+		CREATE UNIQUE INDEX IF NOT EXISTS cards_user_id_name_idx 
 		ON cards (user_id, name);
 
 		CREATE TABLE IF NOT EXISTS binaries (
@@ -67,9 +67,9 @@ const (
 			bin     BYTEA		 NOT NULL,
 			notes   BYTEA        NOT NULL
 		);
-		CREATE INDEX IF NOT EXISTS user_id_idx 
+		CREATE INDEX IF NOT EXISTS binaries_user_id_idx 
 		ON binaries (user_id);
-		CREATE UNIQUE INDEX IF NOT EXISTS user_id_name_idx 
+		CREATE UNIQUE INDEX IF NOT EXISTS binaries_user_id_name_idx
 		ON binaries (user_id, name);
 		`
 )
@@ -312,6 +312,8 @@ func (p *PgxStore) Write(ctx context.Context, data any) error {
 		query = writeQuery["cards"]
 	case storage.NoteData:
 		query = writeQuery["notes"]
+	case storage.BinaryData:
+		query = writeQuery["binaries"]
 	default:
 		return errUnkmownDataType
 	}
@@ -339,6 +341,8 @@ func (p *PgxStore) Update(ctx context.Context, data any) error {
 		query = updateQuery["cards"]
 	case storage.NoteData:
 		query = updateQuery["notes"]
+	case storage.BinaryData:
+		query = writeQuery["binaries"]
 	default:
 		return errUnkmownDataType
 	}

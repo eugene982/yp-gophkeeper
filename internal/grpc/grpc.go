@@ -237,6 +237,34 @@ func (s GRPCServer) CardList(ctx context.Context, in *empty.Empty) (*pb.CardList
 	return s.UnimplementedGophKeeperServer.CardList(ctx, in)
 }
 
+func (s GRPCServer) CardWrite(ctx context.Context, in *pb.CardWriteRequest) (*empty.Empty, error) {
+	if s.cardWriteHandler != nil {
+		return s.cardWriteHandler(ctx, in)
+	}
+	return s.UnimplementedGophKeeperServer.CardWrite(ctx, in)
+}
+
+func (s GRPCServer) CardRead(ctx context.Context, in *pb.CardReadRequest) (*pb.CardReadResponse, error) {
+	if s.cardReadHandler != nil {
+		return s.cardReadHandler(ctx, in)
+	}
+	return s.UnimplementedGophKeeperServer.CardRead(ctx, in)
+}
+
+func (s GRPCServer) CardUpdate(ctx context.Context, in *pb.CardUpdateRequest) (*empty.Empty, error) {
+	if s.cardUpdateHandler != nil {
+		return s.cardUpdateHandler(ctx, in)
+	}
+	return s.UnimplementedGophKeeperServer.CardUpdate(ctx, in)
+}
+
+func (s GRPCServer) CardDelete(ctx context.Context, in *pb.CardDelRequest) (*empty.Empty, error) {
+	if s.cardDeleteHandler != nil {
+		return s.cardDeleteHandler(ctx, in)
+	}
+	return s.UnimplementedGophKeeperServer.CardDelete(ctx, in)
+}
+
 // Notes
 
 func (s GRPCServer) NoteList(ctx context.Context, in *empty.Empty) (*pb.NoteListResponse, error) {
@@ -244,4 +272,69 @@ func (s GRPCServer) NoteList(ctx context.Context, in *empty.Empty) (*pb.NoteList
 		return s.noteListHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.NoteList(ctx, in)
+}
+
+func (s GRPCServer) NoteWrite(ctx context.Context, in *pb.NoteWriteRequest) (*empty.Empty, error) {
+	if s.noteWriteHandler != nil {
+		return s.noteWriteHandler(ctx, in)
+	}
+	return s.UnimplementedGophKeeperServer.NoteWrite(ctx, in)
+}
+
+func (s GRPCServer) NoteRead(ctx context.Context, in *pb.NoteReadRequest) (*pb.NoteReadResponse, error) {
+	if s.noteReadHandler != nil {
+		return s.noteReadHandler(ctx, in)
+	}
+	return s.UnimplementedGophKeeperServer.NoteRead(ctx, in)
+}
+
+func (s GRPCServer) NoteUpdate(ctx context.Context, in *pb.NoteUpdateRequest) (*empty.Empty, error) {
+	if s.noteUpdateHandler != nil {
+		return s.noteUpdateHandler(ctx, in)
+	}
+	return s.UnimplementedGophKeeperServer.NoteUpdate(ctx, in)
+}
+
+func (s GRPCServer) NoteDelete(ctx context.Context, in *pb.NoteDelRequest) (*empty.Empty, error) {
+	if s.noteDeleteHandler != nil {
+		return s.noteDeleteHandler(ctx, in)
+	}
+	return s.UnimplementedGophKeeperServer.NoteDelete(ctx, in)
+}
+
+// Binaries
+
+func (s GRPCServer) BinaryList(ctx context.Context, in *empty.Empty) (*pb.BinaryListResponse, error) {
+	if s.binaryListHandler != nil {
+		return s.binaryListHandler(ctx, in)
+	}
+	return s.UnimplementedGophKeeperServer.BinaryList(ctx, in)
+}
+
+func (s GRPCServer) BinaryWrite(ctx context.Context, in *pb.BinaryWriteRequest) (*empty.Empty, error) {
+	if s.binaryWriteHandler != nil {
+		return s.binaryWriteHandler(ctx, in)
+	}
+	return s.UnimplementedGophKeeperServer.BinaryWrite(ctx, in)
+}
+
+func (s GRPCServer) BinaryRead(ctx context.Context, in *pb.BinaryReadRequest) (*pb.BinaryReadResponse, error) {
+	if s.binaryReadHandler != nil {
+		return s.binaryReadHandler(ctx, in)
+	}
+	return s.UnimplementedGophKeeperServer.BinaryRead(ctx, in)
+}
+
+func (s GRPCServer) BinaryUpdate(ctx context.Context, in *pb.BinaryUpdateRequest) (*empty.Empty, error) {
+	if s.binaryUpdateHandler != nil {
+		return s.binaryUpdateHandler(ctx, in)
+	}
+	return s.UnimplementedGophKeeperServer.BinaryUpdate(ctx, in)
+}
+
+func (s GRPCServer) BinaryDelete(ctx context.Context, in *pb.BinaryDelRequest) (*empty.Empty, error) {
+	if s.binaryDeleteHandler != nil {
+		return s.binaryDeleteHandler(ctx, in)
+	}
+	return s.UnimplementedGophKeeperServer.BinaryDelete(ctx, in)
 }

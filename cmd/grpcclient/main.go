@@ -47,15 +47,10 @@ var (
 		"del": delCmd,
 		"upd": updCmd,
 
-		"passwords":   passwordsCmd,
-		"lspasswords": lsPasswordCmd,
-		"newpassword": newPasswordCmd,
-
-		"cards": lsCardCmd,
-		"lscrd": lsCardCmd,
-
-		"notes": lsNoteCmd,
-		"lsnt":  lsNoteCmd,
+		"passwords": passwordsCmd,
+		"cards":     cardsCmd,
+		"notes":     notesCmd,
+		"files":     filesCmd,
 	}
 )
 
@@ -167,6 +162,12 @@ func helpCmd(args []string) error {
 	switch currTable {
 	case "passwords":
 		return helpPasswordCmd(args)
+	case "cards":
+		return helpCardCmd(args)
+	case "notes":
+		return helpNoteCmd(args)
+	case "files":
+		return helpFileCmd(args)
 	}
 
 	fmt.Println(`	
@@ -270,6 +271,12 @@ func lsCmd(args []string) error {
 	switch currTable {
 	case "passwords":
 		return lsPasswordCmd(args)
+	case "cards":
+		return lsCardCmd(args)
+	case "notes":
+		return lsNoteCmd(args)
+	case "files":
+		return lsFileCmd(args)
 	}
 
 	ctx := withToken(context.Background())
@@ -289,60 +296,56 @@ func newCmd(args []string) error {
 	switch currTable {
 	case "passwords":
 		return newPasswordCmd(args)
+	case "cards":
+		return newCardCmd(args)
+	case "notes":
+		return newNoteCmd(args)
+	case "files":
+		return newFileCmd(args)
 	}
-	return fmt.Errorf("выберите таблицу: passwords, cards, notes...")
+	return fmt.Errorf("выберите раздел: passwords, cards, notes или files")
 }
 
 func getCmd(args []string) error {
 	switch currTable {
 	case "passwords":
 		return getPasswordCmd(args)
+	case "cards":
+		return getCardCmd(args)
+	case "notes":
+		return getNoteCmd(args)
+	case "files":
+		return getFileCmd(args)
 	}
-	return fmt.Errorf("выберите таблицу: passwords, cards, notes...")
+	return fmt.Errorf("выберите раздел: passwords, cards, notes или files")
 }
 
 func delCmd(args []string) error {
 	switch currTable {
 	case "passwords":
 		return delPasswordCmd(args)
+	case "cards":
+		return delCardCmd(args)
+	case "notes":
+		return delNoteCmd(args)
+	case "files":
+		return delFileCmd(args)
 	}
-	return fmt.Errorf("выберите таблицу: passwords, cards, notes...")
+	return fmt.Errorf("выберите раздел: passwords, cards, notes или files")
 }
 
 func updCmd(args []string) error {
 	switch currTable {
 	case "passwords":
 		return updPasswordCmd(args)
+	case "cards":
+		return updCardCmd(args)
+	case "notes":
+		return updNoteCmd(args)
+	case "files":
+		return updFileCmd(args)
 	}
-	return errors.New("выберите таблицу: passwords, cards, notes...")
-}
-
-func lsCardCmd([]string) error {
-
-	ctx := withToken(context.Background())
-	resp, err := client.CardList(ctx, &empty.Empty{})
-	if err != nil {
-		return nil
-	}
-
-	fmt.Println("\tCards:", strings.Join(resp.Names, "; "))
-	fmt.Println("\tCount:", len(resp.Names))
-
-	return nil
-}
-
-func lsNoteCmd([]string) error {
-
-	ctx := withToken(context.Background())
-	resp, err := client.NoteList(ctx, &empty.Empty{})
-	if err != nil {
-		return nil
-	}
-
-	fmt.Println("\tNotes:", strings.Join(resp.Names, "; "))
-	fmt.Println("\tCount:", len(resp.Names))
-
-	return nil
+	return fmt.Errorf("выберите раздел: passwords, cards, notes или files")
 }
 
 func withToken(ctx context.Context) context.Context {

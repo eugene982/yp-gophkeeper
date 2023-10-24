@@ -25,18 +25,18 @@ func (f BinaryListGetterFunc) BinaryList(ctx context.Context, userID string) ([]
 
 var _ BinaryListGetter = BinaryListGetterFunc(nil)
 
-type GRPCListHandler func(ctx context.Context, in *empty.Empty) (*pb.NoteListResponse, error)
+type GRPCListHandler func(ctx context.Context, in *empty.Empty) (*pb.BinaryListResponse, error)
 
 // NewGRPCListHandler
 func NewGRPCListHandler(g BinaryListGetter, getUserID handler.GetUserIDFunc) GRPCListHandler {
-	return func(ctx context.Context, in *empty.Empty) (*pb.NoteListResponse, error) {
+	return func(ctx context.Context, in *empty.Empty) (*pb.BinaryListResponse, error) {
 
 		userID, err := getUserID(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		var resp pb.NoteListResponse
+		var resp pb.BinaryListResponse
 		resp.Names, err = g.BinaryList(ctx, userID)
 		if err != nil {
 			if errors.Is(err, storage.ErrNoContent) {

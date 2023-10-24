@@ -9,71 +9,71 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 )
 
-func passwordsCmd([]string) error {
+func cardsCmd([]string) error {
 	if userName == "" {
 		return errUnauthenticated
 	}
-	currTable = "passwords"
+	currTable = "cards"
 	return nil
 }
 
-func helpPasswordCmd(args []string) error {
+func helpCardCmd(args []string) error {
 	fmt.Println(`	
-	"ls"         - список сохраненных паролей
-	"new [name]" - создание нового пароля
+	"ls"         - список сохраненных карт
+	"new [name]" - создание новой карты
 	"get [name]" - получение из хранилища
 	"upd [name]" - обновление данных в хранилище
 	"del [name]" - получение пароля из хранилища`)
 	return nil
 }
 
-func lsPasswordCmd([]string) error {
+func lsCardCmd([]string) error {
 
 	ctx := withToken(context.Background())
-	resp, err := client.PasswordList(ctx, &empty.Empty{})
+	resp, err := client.CardList(ctx, &empty.Empty{})
 	if err != nil {
 		return nil
 	}
 
-	fmt.Println("\tPasswords:", strings.Join(resp.Names, "; "))
-	fmt.Println("\tCount: ", len(resp.Names))
+	fmt.Println("\tCards:", strings.Join(resp.Names, "; "))
+	fmt.Println("\tCount:", len(resp.Names))
 
 	return nil
 }
 
-func newPasswordCmd(args []string) (err error) {
-	var req pb.PasswordWriteRequest
+func newCardCmd(args []string) (err error) {
+	var req pb.CardWriteRequest
 
 	if len(args) > 0 {
 		req.Name = args[0]
 	} else {
-		fmt.Print("\t    Name: ")
+		fmt.Print("\t  Name: ")
 		req.Name, err = conReader.ReadLine()
 		if err != nil {
 			return err
 		}
 	}
 
-	fmt.Print("\tUsername: ")
-	req.Username, err = conReader.ReadLine()
+	fmt.Print("\tNumber: ")
+	req.Number, err = conReader.ReadLine()
 	if err != nil {
 		return err
 	}
 
-	fmt.Print("\tPassword: ")
-	req.Password, err = conReader.ReadLine()
+	fmt.Print("\t   Pin: ")
+	req.Pin, err = conReader.ReadLine()
 	if err != nil {
 		return err
 	}
 
-	fmt.Print("\t   Notes: ")
+	fmt.Print("\t Notes: ")
 	req.Notes, err = conReader.ReadLine()
 	if err != nil {
 		return err
 	}
 
 	ctx := withToken(context.Background())
-	_, err = client.PasswordWrite(ctx, &req)
+	_, err = client.CardWrite(ctx, &req)
 	if err != nil {
 		return err
 	}
@@ -81,13 +81,13 @@ func newPasswordCmd(args []string) (err error) {
 	return nil
 }
 
-func getPasswordCmd(args []string) (err error) {
-	var req pb.PasswordReadRequest
+func getCardCmd(args []string) (err error) {
+	var req pb.CardReadRequest
 
 	if len(args) > 0 {
 		req.Name = args[0]
 	} else {
-		fmt.Print("\t    Name: ")
+		fmt.Print("\t  Name: ")
 		req.Name, err = conReader.ReadLine()
 		if err != nil {
 			return err
@@ -96,18 +96,18 @@ func getPasswordCmd(args []string) (err error) {
 
 	ctx := withToken(context.Background())
 
-	resp, err := client.PasswordRead(ctx, &req)
+	resp, err := client.CardRead(ctx, &req)
 	if err != nil {
 		return err
 	}
-	fmt.Println("\tUsername:", resp.Username)
-	fmt.Println("\tPassword:", resp.Password)
-	fmt.Println("\t   Notes:", resp.Notes)
+	fmt.Println("\tNumber:", resp.Number)
+	fmt.Println("\t   Pin:", resp.Pin)
+	fmt.Println("\t Notes:", resp.Notes)
 	return nil
 }
 
-func delPasswordCmd(args []string) (err error) {
-	var req pb.PasswordDelRequest
+func delCardCmd(args []string) (err error) {
+	var req pb.CardDelRequest
 
 	if len(args) > 0 {
 		req.Name = args[0]
@@ -121,7 +121,7 @@ func delPasswordCmd(args []string) (err error) {
 
 	ctx := withToken(context.Background())
 
-	_, err = client.PasswordDelete(ctx, &req)
+	_, err = client.CardDelete(ctx, &req)
 	if err != nil {
 		return err
 	}
@@ -129,16 +129,16 @@ func delPasswordCmd(args []string) (err error) {
 	return nil
 }
 
-func updPasswordCmd(args []string) (err error) {
+func updCardCmd(args []string) (err error) {
 	var (
-		readReq pb.PasswordReadRequest
-		updReq  pb.PasswordUpdateRequest
+		readReq pb.CardReadRequest
+		updReq  pb.CardUpdateRequest
 	)
 
 	if len(args) > 0 {
 		readReq.Name = args[0]
 	} else {
-		fmt.Print("\t    Name: ")
+		fmt.Print("\t  Name: ")
 		readReq.Name, err = conReader.ReadLine()
 		if err != nil {
 			return err
@@ -147,24 +147,24 @@ func updPasswordCmd(args []string) (err error) {
 
 	ctx := withToken(context.Background())
 
-	resp, err := client.PasswordRead(ctx, &readReq)
+	resp, err := client.CardRead(ctx, &readReq)
 	if err != nil {
 		return err
 	}
-	fmt.Println("\tUsername:", resp.Username)
-	fmt.Println("\tPassword:", resp.Password)
-	fmt.Println("\t   Notes:", resp.Notes)
+	fmt.Println("\tNumber:", resp.Number)
+	fmt.Println("\t   Pin:", resp.Pin)
+	fmt.Println("\t Notes:", resp.Notes)
 
 	fmt.Println("\tNew")
 	updReq.Id = resp.Id
-	updReq.Write = &pb.PasswordWriteRequest{
-		Name:     resp.Name,
-		Username: resp.Username,
-		Password: resp.Password,
-		Notes:    resp.Notes,
+	updReq.Write = &pb.CardWriteRequest{
+		Name:   resp.Name,
+		Number: resp.Number,
+		Pin:    resp.Pin,
+		Notes:  resp.Notes,
 	}
 
-	fmt.Print("\t    Name: ")
+	fmt.Print("\t  Name: ")
 	val, err := conReader.ReadLine()
 	if err != nil {
 		return err
@@ -172,28 +172,28 @@ func updPasswordCmd(args []string) (err error) {
 		updReq.Write.Name = val
 	}
 
-	fmt.Print("\tUsername: ")
+	fmt.Print("\t Number: ")
 	if val, err = conReader.ReadLine(); err != nil {
 		return err
 	} else if val != "" {
-		updReq.Write.Username = val
+		updReq.Write.Number = val
 	}
 
-	fmt.Print("\tPassword: ")
+	fmt.Print("\t   Pin: ")
 	if val, err = conReader.ReadLine(); err != nil {
 		return err
 	} else if val != "" {
-		updReq.Write.Password = val
+		updReq.Write.Pin = val
 	}
 
-	fmt.Print("\t   Notes: ")
+	fmt.Print("\t  Notes: ")
 	if val, err = conReader.ReadLine(); err != nil {
 		return err
 	} else if val != "" {
 		updReq.Write.Notes = val
 	}
 
-	_, err = client.PasswordUpdate(ctx, &updReq)
+	_, err = client.CardUpdate(ctx, &updReq)
 	if err != nil {
 		return err
 	}
