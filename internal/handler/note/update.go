@@ -20,13 +20,13 @@ type NoteUpdater interface {
 	NoteUpdate(ctx context.Context, data storage.NoteData) error
 }
 
-type NoteUpdateFunc func(ctx context.Context, data storage.NoteData) error
+type NoteUpdaterFunc func(ctx context.Context, data storage.NoteData) error
 
-func (f NoteUpdateFunc) NoteUpdate(ctx context.Context, data storage.NoteData) error {
+func (f NoteUpdaterFunc) NoteUpdate(ctx context.Context, data storage.NoteData) error {
 	return f(ctx, data)
 }
 
-var _ NoteUpdater = NoteUpdateFunc(nil)
+var _ NoteUpdater = NoteUpdaterFunc(nil)
 
 type GRPCUpdateHandler func(context.Context, *pb.NoteUpdateRequest) (*empty.Empty, error)
 
@@ -58,6 +58,8 @@ func NewGRPCUpdateHandler(u NoteUpdater, getUserID handler.GetUserIDFunc, enc cr
 			if errors.Is(err, storage.ErrNoContent) {
 				return nil, status.Error(codes.NotFound, err.Error())
 			}
+			logger.Errorf("note update error: %w", err)
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 
 		return &empty.Empty{}, nil

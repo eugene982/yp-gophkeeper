@@ -20,13 +20,13 @@ type BinaryUpdater interface {
 	BinaryUpdate(ctx context.Context, data storage.BinaryData) error
 }
 
-type BinaryUpdateFunc func(ctx context.Context, data storage.BinaryData) error
+type BinaryUpdaterFunc func(ctx context.Context, data storage.BinaryData) error
 
-func (f BinaryUpdateFunc) BinaryUpdate(ctx context.Context, data storage.BinaryData) error {
+func (f BinaryUpdaterFunc) BinaryUpdate(ctx context.Context, data storage.BinaryData) error {
 	return f(ctx, data)
 }
 
-var _ BinaryUpdater = BinaryUpdateFunc(nil)
+var _ BinaryUpdater = BinaryUpdaterFunc(nil)
 
 type GRPCUpdateHandler func(context.Context, *pb.BinaryUpdateRequest) (*empty.Empty, error)
 
@@ -64,6 +64,8 @@ func NewGRPCUpdateHandler(u BinaryUpdater, getUserID handler.GetUserIDFunc, enc 
 			if errors.Is(err, storage.ErrNoContent) {
 				return nil, status.Error(codes.NotFound, err.Error())
 			}
+			logger.Errorf("binary update error: %w", err)
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 
 		return &empty.Empty{}, nil

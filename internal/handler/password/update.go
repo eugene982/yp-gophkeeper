@@ -20,13 +20,13 @@ type PasswordUpdater interface {
 	PasswordUpdate(ctx context.Context, data storage.PasswordData) error
 }
 
-type PasswordUpdateFunc func(ctx context.Context, data storage.PasswordData) error
+type PasswordUpdaterFunc func(ctx context.Context, data storage.PasswordData) error
 
-func (f PasswordUpdateFunc) PasswordUpdate(ctx context.Context, data storage.PasswordData) error {
+func (f PasswordUpdaterFunc) PasswordUpdate(ctx context.Context, data storage.PasswordData) error {
 	return f(ctx, data)
 }
 
-var _ PasswordUpdater = PasswordUpdateFunc(nil)
+var _ PasswordUpdater = PasswordUpdaterFunc(nil)
 
 type GRPCUpdateHandler func(context.Context, *pb.PasswordUpdateRequest) (*empty.Empty, error)
 
@@ -70,6 +70,8 @@ func NewGRPCUpdateHandler(u PasswordUpdater, getUserID handler.GetUserIDFunc, en
 			if errors.Is(err, storage.ErrNoContent) {
 				return nil, status.Error(codes.NotFound, err.Error())
 			}
+			logger.Errorf("update password error: %w", err)
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 
 		return &empty.Empty{}, nil

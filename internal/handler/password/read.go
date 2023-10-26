@@ -57,7 +57,7 @@ func NewGRPCReadHandler(r PasswordReader, getUserID handler.GetUserIDFunc, dec c
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		notes, err := dec.Decrypt(data.Password)
+		notes, err := dec.Decrypt(data.Notes)
 		if err != nil {
 			logger.Errorf("decrypt notes error: %w", err)
 			return nil, status.Error(codes.Internal, err.Error())

@@ -20,13 +20,13 @@ type CardUpdater interface {
 	CardUpdate(ctx context.Context, data storage.CardData) error
 }
 
-type CardUpdateFunc func(ctx context.Context, data storage.CardData) error
+type CardUpdaterFunc func(ctx context.Context, data storage.CardData) error
 
-func (f CardUpdateFunc) CardUpdate(ctx context.Context, data storage.CardData) error {
+func (f CardUpdaterFunc) CardUpdate(ctx context.Context, data storage.CardData) error {
 	return f(ctx, data)
 }
 
-var _ CardUpdater = CardUpdateFunc(nil)
+var _ CardUpdater = CardUpdaterFunc(nil)
 
 type GRPCUpdateHandler func(context.Context, *pb.CardUpdateRequest) (*empty.Empty, error)
 
@@ -70,6 +70,8 @@ func NewGRPCUpdateHandler(u CardUpdater, getUserID handler.GetUserIDFunc, enc cr
 			if errors.Is(err, storage.ErrNoContent) {
 				return nil, status.Error(codes.NotFound, err.Error())
 			}
+			logger.Errorf("card update error: %w", err)
+			return nil, status.Error(codes.Internal, err.Error())
 		}
 
 		return &empty.Empty{}, nil
