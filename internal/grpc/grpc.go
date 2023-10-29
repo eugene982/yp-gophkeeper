@@ -2,7 +2,10 @@ package grpc
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"net"
+	"os"
 	"time"
 
 	"github.com/bufbuild/protovalidate-go"
@@ -20,6 +23,7 @@ import (
 	"github.com/eugene982/yp-gophkeeper/internal/handler/password"
 	"github.com/eugene982/yp-gophkeeper/internal/handler/ping"
 	"github.com/eugene982/yp-gophkeeper/internal/handler/register"
+	"github.com/eugene982/yp-gophkeeper/internal/logger"
 	"github.com/eugene982/yp-gophkeeper/internal/storage"
 
 	crypt "github.com/eugene982/yp-gophkeeper/internal/crypto"
@@ -73,6 +77,7 @@ type GRPCServer struct {
 	binaryUpdateHandler binary.GRPCUpdateHandler
 }
 
+// NewServer функция-коструктор нового grps сервера
 func NewServer(store storage.Storage, crypt crypt.EncryptDecryptor, addr string) (*GRPCServer, error) {
 	var (
 		srv GRPCServer
@@ -94,10 +99,14 @@ func NewServer(store storage.Storage, crypt crypt.EncryptDecryptor, addr string)
 	// с прослойками:
 	//	- логирования
 	//	- валидации входящих данных
-	srv.server = grpc.NewServer(grpc.ChainUnaryInterceptor(
-		loggerInterceptor,
-		protovalidate_middleware.UnaryServerInterceptor(validator),
-	))
+	srv.server = grpc.NewServer(
+		grpc.ChainStreamInterceptor(
+			loggerStreamInterceptor,
+			protovalidate_middleware.StreamServerInterceptor(validator)),
+		grpc.ChainUnaryInterceptor(
+			loggerInterceptor,
+			protovalidate_middleware.UnaryServerInterceptor(validator)),
+	)
 
 	// Функция хеширования паролей
 	hashFn := func(passwd string) (string, error) {
@@ -157,8 +166,14 @@ func NewServer(store storage.Storage, crypt crypt.EncryptDecryptor, addr string)
 	return &srv, nil
 }
 
+// Start - запуск сервера
 func (s *GRPCServer) Start() error {
 	return s.server.Serve(s.listen)
+}
+
+// Stop - остановка сервера
+func (s *GRPCServer) Stop() {
+	s.server.Stop()
 }
 
 func (s GRPCServer) Ping(ctx context.Context, in *empty.Empty) (*pb.PingResponse, error) {
@@ -311,7 +326,7 @@ func (s GRPCServer) BinaryList(ctx context.Context, in *empty.Empty) (*pb.Binary
 	return s.UnimplementedGophKeeperServer.BinaryList(ctx, in)
 }
 
-func (s GRPCServer) BinaryWrite(ctx context.Context, in *pb.BinaryWriteRequest) (*empty.Empty, error) {
+func (s GRPCServer) BinaryWrite(ctx context.Context, in *pb.BinaryWriteRequest) (*pb.BinaryWriteResponse, error) {
 	if s.binaryWriteHandler != nil {
 		return s.binaryWriteHandler(ctx, in)
 	}
@@ -337,4 +352,44 @@ func (s GRPCServer) BinaryDelete(ctx context.Context, in *pb.BinaryDelRequest) (
 		return s.binaryDeleteHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.BinaryDelete(ctx, in)
+}
+
+func (s GRPCServer) BinaryUpload(us pb.GophKeeper_BinaryUploadServer) error {
+	//ctx := us.Context()
+
+	dirName := fmt.Sprintf("upload_tmp")
+	if err := os.MkdirAll(dirName, os.ModePerm); err != nil {
+		return err
+	}
+
+	for {
+		upload, err := us.Recv()
+		if err != nil {
+			if err == io.EOF {
+				err = nil
+				break
+			}
+			logger.Debug("upload", "num", upload.Num)
+			logger.Debug("BinaryUpload", "err", err)
+			return err
+		}
+
+		fileName := fmt.Sprintf("%s/%d.bin", dirName, upload.Num)
+		file, err := os.Create(fileName)
+		if err != nil {
+			return err
+		}
+
+		_, err = file.Write(upload.Chunk)
+		file.Close()
+		if err != nil {
+			break
+		}
+	}
+
+	return nil //s.UnimplementedGophKeeperServer.BinaryUpload(us)
+}
+
+func (s GRPCServer) BinaryDownload(req *pb.BidaryDownloadRequest, ds pb.GophKeeper_BinaryDownloadServer) error {
+	return s.UnimplementedGophKeeperServer.BinaryDownload(req, ds)
 }

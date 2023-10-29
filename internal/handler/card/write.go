@@ -30,6 +30,7 @@ var _ CardWritter = CardWritterFunc(nil)
 
 type GRPCWriteHandler func(ctx context.Context, in *pb.CardWriteRequest) (*empty.Empty, error)
 
+// NewGRPCWriteHandler - функция-конструктор ручки записи карты
 func NewGRPCWriteHandler(w CardWritter, getUserID handler.GetUserIDFunc, enc crypt.Encryptor) GRPCWriteHandler {
 	return func(ctx context.Context, in *pb.CardWriteRequest) (*empty.Empty, error) {
 		var err error

@@ -29,6 +29,7 @@ var _ PasswordReader = PasswordReaderFunc(nil)
 
 type GRPCReadHandler func(context.Context, *pb.PasswordReadRequest) (*pb.PasswordReadResponse, error)
 
+// NewGRPCReadHandler - функця-конструктор ручки чтения данных пароля
 func NewGRPCReadHandler(r PasswordReader, getUserID handler.GetUserIDFunc, dec crypt.Decryptor) GRPCReadHandler {
 	return func(ctx context.Context, in *pb.PasswordReadRequest) (*pb.PasswordReadResponse, error) {
 		userID, err := getUserID(ctx)

@@ -27,7 +27,7 @@ var _ BinaryListGetter = BinaryListGetterFunc(nil)
 
 type GRPCListHandler func(ctx context.Context, in *empty.Empty) (*pb.BinaryListResponse, error)
 
-// NewGRPCListHandler
+// NewGRPCListHandler - функция-конструктор ручки получения списка наименований бинарников
 func NewGRPCListHandler(g BinaryListGetter, getUserID handler.GetUserIDFunc) GRPCListHandler {
 	return func(ctx context.Context, in *empty.Empty) (*pb.BinaryListResponse, error) {
 

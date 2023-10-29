@@ -30,6 +30,7 @@ var _ BinaryUpdater = BinaryUpdaterFunc(nil)
 
 type GRPCUpdateHandler func(context.Context, *pb.BinaryUpdateRequest) (*empty.Empty, error)
 
+// NewGRPCUpdateHandler - функция конструктор ручки для обновления бинарника
 func NewGRPCUpdateHandler(u BinaryUpdater, getUserID handler.GetUserIDFunc, enc crypt.Encryptor) GRPCUpdateHandler {
 	return func(ctx context.Context, in *pb.BinaryUpdateRequest) (*empty.Empty, error) {
 		var err error
@@ -37,17 +38,12 @@ func NewGRPCUpdateHandler(u BinaryUpdater, getUserID handler.GetUserIDFunc, enc 
 		upd := storage.BinaryData{
 			ID:   in.Id,
 			Name: in.Write.Name,
+			Sise: in.Write.Sise,
 		}
 
 		upd.UserID, err = getUserID(ctx)
 		if err != nil {
 			return nil, err
-		}
-
-		upd.Bin, err = enc.Encrypt(in.Write.Bin)
-		if err != nil {
-			logger.Errorf("encrypt bin error: %w", err)
-			return nil, status.Error(codes.Internal, err.Error())
 		}
 
 		upd.Notes, err = enc.Encrypt([]byte(in.Write.Notes))

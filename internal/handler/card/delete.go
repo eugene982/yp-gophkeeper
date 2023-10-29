@@ -27,6 +27,7 @@ var _ CardDeleter = CardDeleteFunc(nil)
 
 type GRPCDeleteHandler func(ctx context.Context, in *pb.CardDelRequest) (*empty.Empty, error)
 
+// NewGRPCDeleteHandler - функция-конструктор ручки удаления карты
 func NewGRPCDeleteHandler(d CardDeleter, getUserID handler.GetUserIDFunc) GRPCDeleteHandler {
 	return func(ctx context.Context, in *pb.CardDelRequest) (*empty.Empty, error) {
 		userID, err := getUserID(ctx)

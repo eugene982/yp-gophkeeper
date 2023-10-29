@@ -30,6 +30,7 @@ var _ PasswordWritter = PasswordWritterFunc(nil)
 
 type GRPCWriteHandler func(ctx context.Context, in *pb.PasswordWriteRequest) (*empty.Empty, error)
 
+// NewGRPCWriteHandler - функция-конструктор ручки записи пароля
 func NewGRPCWriteHandler(w PasswordWritter, getUserID handler.GetUserIDFunc, enc crypt.Encryptor) GRPCWriteHandler {
 	return func(ctx context.Context, in *pb.PasswordWriteRequest) (*empty.Empty, error) {
 		var err error

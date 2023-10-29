@@ -29,6 +29,7 @@ var _ CardReader = CardReaderFunc(nil)
 
 type GRPCReadHandler func(context.Context, *pb.CardReadRequest) (*pb.CardReadResponse, error)
 
+// NewGRPCReadHandler - функця-конструктор ручки чтения данных карты
 func NewGRPCReadHandler(r CardReader, getUserID handler.GetUserIDFunc, dec crypt.Decryptor) GRPCReadHandler {
 	return func(ctx context.Context, in *pb.CardReadRequest) (*pb.CardReadResponse, error) {
 		userID, err := getUserID(ctx)

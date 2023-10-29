@@ -30,6 +30,7 @@ var _ NoteWritter = NoteWritterFunc(nil)
 
 type GRPCWriteHandler func(ctx context.Context, in *pb.NoteWriteRequest) (*empty.Empty, error)
 
+// NewGRPCWriteHandler - функция-конструктор ручки записи заметки
 func NewGRPCWriteHandler(w NoteWritter, getUserID handler.GetUserIDFunc, enc crypt.Encryptor) GRPCWriteHandler {
 	return func(ctx context.Context, in *pb.NoteWriteRequest) (*empty.Empty, error) {
 		var err error

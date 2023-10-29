@@ -13,6 +13,7 @@ type ListData struct {
 	UserID         string `db:"user_id"`
 	NotesCount     int    `db:"notes_count"`
 	CardsCount     int    `db:"cards_count"`
+	BinariesCount  int    `db:"binaries_count"`
 	PasswordsCount int    `db:"passwords_count"`
 }
 
@@ -26,6 +27,7 @@ type PasswordData struct {
 	Notes    []byte `db:"notes"`
 }
 
+// CardData информация о различных картах
 type CardData struct {
 	ID     int32  `db:"id"`
 	UserID string `db:"user_id"`
@@ -35,6 +37,7 @@ type CardData struct {
 	Notes  []byte `db:"notes"`
 }
 
+// NoteData различные заметки, текст
 type NoteData struct {
 	ID     int32  `db:"id"`
 	UserID string `db:"user_id"`
@@ -42,10 +45,11 @@ type NoteData struct {
 	Notes  []byte `db:"notes"`
 }
 
+// BinaryData двоичные данные, файлы
 type BinaryData struct {
 	ID     int32  `db:"id"`
 	UserID string `db:"user_id"`
 	Name   string `db:"name"`
-	Bin    []byte `db:"bin"`
+	Sise   uint64 `db:"size"`
 	Notes  []byte `db:"notes"`
 }

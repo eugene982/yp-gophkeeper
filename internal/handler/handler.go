@@ -19,6 +19,7 @@ var (
 
 type GetUserIDFunc func(context.Context) (string, error)
 
+// GetUserIDFromMD функция получает идентификатор пользователя из токена
 func GetUserIDFromMD(ctx context.Context, secret_key string) (string, error) {
 	var token string
 

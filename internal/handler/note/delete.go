@@ -27,6 +27,7 @@ var _ NoteDeleter = NoteDeleteFunc(nil)
 
 type GRPCDeleteHandler func(ctx context.Context, in *pb.NoteDelRequest) (*empty.Empty, error)
 
+// NewGRPCDeleteHandler - функция-конструктор ручки удаления заметки
 func NewGRPCDeleteHandler(d NoteDeleter, getUserID handler.GetUserIDFunc) GRPCDeleteHandler {
 	return func(ctx context.Context, in *pb.NoteDelRequest) (*empty.Empty, error) {
 		userID, err := getUserID(ctx)

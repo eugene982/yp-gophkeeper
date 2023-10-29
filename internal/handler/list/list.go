@@ -43,9 +43,10 @@ func NewRPCListHandler(list ListReader, getUserID handler.GetUserIDFunc) GRPCHan
 		}
 
 		return &pb.ListResponse{
-			PasswordsCount: int32(data.PasswordsCount),
-			NotesCount:     int32(data.NotesCount),
 			CardsCount:     int32(data.CardsCount),
+			NotesCount:     int32(data.NotesCount),
+			BinariesCount:  int32(data.BinariesCount),
+			PasswordsCount: int32(data.PasswordsCount),
 		}, nil
 	}
 }

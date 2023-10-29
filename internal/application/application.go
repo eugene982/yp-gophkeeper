@@ -10,6 +10,7 @@ import (
 	_ "github.com/eugene982/yp-gophkeeper/internal/storage/postgres"
 )
 
+// Application структура основного приложения
 type Application struct {
 	grpcServer *grpc.GRPCServer
 	storage    storage.Storage
@@ -44,4 +45,10 @@ func New(conf config.Config) (*Application, error) {
 // Start запуск прослушивания
 func (app *Application) Start() error {
 	return app.grpcServer.Start()
+}
+
+// Stop остановка приложения
+func (app *Application) Stop() error {
+	app.grpcServer.Stop()
+	return app.storage.Close()
 }

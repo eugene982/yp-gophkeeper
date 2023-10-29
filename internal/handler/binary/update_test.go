@@ -68,7 +68,7 @@ func TestGRPCUpdateHandler(t *testing.T) {
 			Id: 1,
 			Write: &pb.BinaryWriteRequest{
 				Name:  "name",
-				Bin:   []byte("bin"),
+				Sise:  64,
 				Notes: "notes",
 			},
 		}
@@ -85,9 +85,6 @@ func TestGRPCUpdateHandler(t *testing.T) {
 		})
 
 		enc := crypt.EncryptFunc(func(text []byte) ([]byte, error) {
-			if tcase.ecnErr == binEncErr && string(text) == "bin" {
-				return nil, tcase.ecnErr
-			}
 			if tcase.ecnErr == notesEncErr && string(text) == "notes" {
 				return nil, tcase.ecnErr
 			}

@@ -27,7 +27,7 @@ var _ NoteListGetter = NoteListGetterFunc(nil)
 
 type GRPCListHandler func(ctx context.Context, in *empty.Empty) (*pb.NoteListResponse, error)
 
-// NewGRPCListHandler
+// NewGRPCListHandler - функция-конструктор ручки получения списка наименований заметок
 func NewGRPCListHandler(g NoteListGetter, getUserID handler.GetUserIDFunc) GRPCListHandler {
 	return func(ctx context.Context, in *empty.Empty) (*pb.NoteListResponse, error) {
 

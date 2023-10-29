@@ -27,6 +27,7 @@ var _ CardListGetter = CardListGetterFunc(nil)
 
 type GRPCListHandler func(ctx context.Context, in *empty.Empty) (*pb.CardListResponse, error)
 
+// NewGRPCListHandler - функция-конструктор ручки получения списка наименований карт
 func NewGRPCListHandler(g CardListGetter, getUserID handler.GetUserIDFunc) GRPCListHandler {
 	return func(ctx context.Context, in *empty.Empty) (*pb.CardListResponse, error) {
 

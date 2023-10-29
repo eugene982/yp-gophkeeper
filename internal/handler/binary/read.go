@@ -29,6 +29,7 @@ var _ BinaryReader = BinaryReaderFunc(nil)
 
 type GRPCReadHandler func(context.Context, *pb.BinaryReadRequest) (*pb.BinaryReadResponse, error)
 
+// NewGRPCReadHandler - функця-конструктор ручки чтения двоичных данных
 func NewGRPCReadHandler(r BinaryReader, getUserID handler.GetUserIDFunc, dec crypt.Decryptor) GRPCReadHandler {
 	return func(ctx context.Context, in *pb.BinaryReadRequest) (*pb.BinaryReadResponse, error) {
 		userID, err := getUserID(ctx)
@@ -45,12 +46,6 @@ func NewGRPCReadHandler(r BinaryReader, getUserID handler.GetUserIDFunc, dec cry
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		bin, err := dec.Decrypt(data.Bin)
-		if err != nil {
-			logger.Errorf("decrypt bin error: %w", err)
-			return nil, status.Error(codes.Internal, err.Error())
-		}
-
 		notes, err := dec.Decrypt(data.Notes)
 		if err != nil {
 			logger.Errorf("decrypt notes error: %w", err)
@@ -60,7 +55,7 @@ func NewGRPCReadHandler(r BinaryReader, getUserID handler.GetUserIDFunc, dec cry
 		resp := pb.BinaryReadResponse{
 			Id:    data.ID,
 			Name:  data.Name,
-			Bin:   bin,
+			Size:  data.Sise,
 			Notes: string(notes),
 		}
 

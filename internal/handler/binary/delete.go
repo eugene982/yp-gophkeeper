@@ -27,6 +27,7 @@ var _ BinaryDeleter = BinaryDeleteFunc(nil)
 
 type GRPCDeleteHandler func(ctx context.Context, in *pb.BinaryDelRequest) (*empty.Empty, error)
 
+// NewGRPCDeleteHandler - функция-конструктор ручки удаления бинарника
 func NewGRPCDeleteHandler(d BinaryDeleter, getUserID handler.GetUserIDFunc) GRPCDeleteHandler {
 	return func(ctx context.Context, in *pb.BinaryDelRequest) (*empty.Empty, error) {
 		userID, err := getUserID(ctx)

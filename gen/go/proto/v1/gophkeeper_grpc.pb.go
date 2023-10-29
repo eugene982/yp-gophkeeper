@@ -44,6 +44,8 @@ const (
 	GophKeeper_BinaryUpdate_FullMethodName   = "/gophermart.v1.GophKeeper/BinaryUpdate"
 	GophKeeper_BinaryRead_FullMethodName     = "/gophermart.v1.GophKeeper/BinaryRead"
 	GophKeeper_BinaryDelete_FullMethodName   = "/gophermart.v1.GophKeeper/BinaryDelete"
+	GophKeeper_BinaryUpload_FullMethodName   = "/gophermart.v1.GophKeeper/BinaryUpload"
+	GophKeeper_BinaryDownload_FullMethodName = "/gophermart.v1.GophKeeper/BinaryDownload"
 )
 
 // GophKeeperClient is the client API for GophKeeper service.
@@ -91,13 +93,17 @@ type GophKeeperClient interface {
 	// BinaryList - список
 	BinaryList(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*BinaryListResponse, error)
 	// BinaryWrite запись нового
-	BinaryWrite(ctx context.Context, in *BinaryWriteRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	BinaryWrite(ctx context.Context, in *BinaryWriteRequest, opts ...grpc.CallOption) (*BinaryWriteResponse, error)
 	// BinaryUpdate обновление
 	BinaryUpdate(ctx context.Context, in *BinaryUpdateRequest, opts ...grpc.CallOption) (*empty.Empty, error)
-	// BinaryRead чтение
+	// BinaryRead чтение информации о двоичных данных
 	BinaryRead(ctx context.Context, in *BinaryReadRequest, opts ...grpc.CallOption) (*BinaryReadResponse, error)
 	// BinaryDelete удаление
 	BinaryDelete(ctx context.Context, in *BinaryDelRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	// BinaryUpload потоковая выгрузка бинарника
+	BinaryUpload(ctx context.Context, opts ...grpc.CallOption) (GophKeeper_BinaryUploadClient, error)
+	// BinaryDownload потоковая загрузка
+	BinaryDownload(ctx context.Context, in *BidaryDownloadRequest, opts ...grpc.CallOption) (GophKeeper_BinaryDownloadClient, error)
 }
 
 type gophKeeperClient struct {
@@ -288,8 +294,8 @@ func (c *gophKeeperClient) BinaryList(ctx context.Context, in *empty.Empty, opts
 	return out, nil
 }
 
-func (c *gophKeeperClient) BinaryWrite(ctx context.Context, in *BinaryWriteRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *gophKeeperClient) BinaryWrite(ctx context.Context, in *BinaryWriteRequest, opts ...grpc.CallOption) (*BinaryWriteResponse, error) {
+	out := new(BinaryWriteResponse)
 	err := c.cc.Invoke(ctx, GophKeeper_BinaryWrite_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -322,6 +328,72 @@ func (c *gophKeeperClient) BinaryDelete(ctx context.Context, in *BinaryDelReques
 		return nil, err
 	}
 	return out, nil
+}
+
+func (c *gophKeeperClient) BinaryUpload(ctx context.Context, opts ...grpc.CallOption) (GophKeeper_BinaryUploadClient, error) {
+	stream, err := c.cc.NewStream(ctx, &GophKeeper_ServiceDesc.Streams[0], GophKeeper_BinaryUpload_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &gophKeeperBinaryUploadClient{stream}
+	return x, nil
+}
+
+type GophKeeper_BinaryUploadClient interface {
+	Send(*BinaryUplodStream) error
+	CloseAndRecv() (*empty.Empty, error)
+	grpc.ClientStream
+}
+
+type gophKeeperBinaryUploadClient struct {
+	grpc.ClientStream
+}
+
+func (x *gophKeeperBinaryUploadClient) Send(m *BinaryUplodStream) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *gophKeeperBinaryUploadClient) CloseAndRecv() (*empty.Empty, error) {
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	m := new(empty.Empty)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func (c *gophKeeperClient) BinaryDownload(ctx context.Context, in *BidaryDownloadRequest, opts ...grpc.CallOption) (GophKeeper_BinaryDownloadClient, error) {
+	stream, err := c.cc.NewStream(ctx, &GophKeeper_ServiceDesc.Streams[1], GophKeeper_BinaryDownload_FullMethodName, opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &gophKeeperBinaryDownloadClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type GophKeeper_BinaryDownloadClient interface {
+	Recv() (*BinaryDownloadStream, error)
+	grpc.ClientStream
+}
+
+type gophKeeperBinaryDownloadClient struct {
+	grpc.ClientStream
+}
+
+func (x *gophKeeperBinaryDownloadClient) Recv() (*BinaryDownloadStream, error) {
+	m := new(BinaryDownloadStream)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // GophKeeperServer is the server API for GophKeeper service.
@@ -369,13 +441,17 @@ type GophKeeperServer interface {
 	// BinaryList - список
 	BinaryList(context.Context, *empty.Empty) (*BinaryListResponse, error)
 	// BinaryWrite запись нового
-	BinaryWrite(context.Context, *BinaryWriteRequest) (*empty.Empty, error)
+	BinaryWrite(context.Context, *BinaryWriteRequest) (*BinaryWriteResponse, error)
 	// BinaryUpdate обновление
 	BinaryUpdate(context.Context, *BinaryUpdateRequest) (*empty.Empty, error)
-	// BinaryRead чтение
+	// BinaryRead чтение информации о двоичных данных
 	BinaryRead(context.Context, *BinaryReadRequest) (*BinaryReadResponse, error)
 	// BinaryDelete удаление
 	BinaryDelete(context.Context, *BinaryDelRequest) (*empty.Empty, error)
+	// BinaryUpload потоковая выгрузка бинарника
+	BinaryUpload(GophKeeper_BinaryUploadServer) error
+	// BinaryDownload потоковая загрузка
+	BinaryDownload(*BidaryDownloadRequest, GophKeeper_BinaryDownloadServer) error
 	mustEmbedUnimplementedGophKeeperServer()
 }
 
@@ -443,7 +519,7 @@ func (UnimplementedGophKeeperServer) NoteDelete(context.Context, *NoteDelRequest
 func (UnimplementedGophKeeperServer) BinaryList(context.Context, *empty.Empty) (*BinaryListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BinaryList not implemented")
 }
-func (UnimplementedGophKeeperServer) BinaryWrite(context.Context, *BinaryWriteRequest) (*empty.Empty, error) {
+func (UnimplementedGophKeeperServer) BinaryWrite(context.Context, *BinaryWriteRequest) (*BinaryWriteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BinaryWrite not implemented")
 }
 func (UnimplementedGophKeeperServer) BinaryUpdate(context.Context, *BinaryUpdateRequest) (*empty.Empty, error) {
@@ -454,6 +530,12 @@ func (UnimplementedGophKeeperServer) BinaryRead(context.Context, *BinaryReadRequ
 }
 func (UnimplementedGophKeeperServer) BinaryDelete(context.Context, *BinaryDelRequest) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BinaryDelete not implemented")
+}
+func (UnimplementedGophKeeperServer) BinaryUpload(GophKeeper_BinaryUploadServer) error {
+	return status.Errorf(codes.Unimplemented, "method BinaryUpload not implemented")
+}
+func (UnimplementedGophKeeperServer) BinaryDownload(*BidaryDownloadRequest, GophKeeper_BinaryDownloadServer) error {
+	return status.Errorf(codes.Unimplemented, "method BinaryDownload not implemented")
 }
 func (UnimplementedGophKeeperServer) mustEmbedUnimplementedGophKeeperServer() {}
 
@@ -900,6 +982,53 @@ func _GophKeeper_BinaryDelete_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _GophKeeper_BinaryUpload_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(GophKeeperServer).BinaryUpload(&gophKeeperBinaryUploadServer{stream})
+}
+
+type GophKeeper_BinaryUploadServer interface {
+	SendAndClose(*empty.Empty) error
+	Recv() (*BinaryUplodStream, error)
+	grpc.ServerStream
+}
+
+type gophKeeperBinaryUploadServer struct {
+	grpc.ServerStream
+}
+
+func (x *gophKeeperBinaryUploadServer) SendAndClose(m *empty.Empty) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *gophKeeperBinaryUploadServer) Recv() (*BinaryUplodStream, error) {
+	m := new(BinaryUplodStream)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+func _GophKeeper_BinaryDownload_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(BidaryDownloadRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(GophKeeperServer).BinaryDownload(m, &gophKeeperBinaryDownloadServer{stream})
+}
+
+type GophKeeper_BinaryDownloadServer interface {
+	Send(*BinaryDownloadStream) error
+	grpc.ServerStream
+}
+
+type gophKeeperBinaryDownloadServer struct {
+	grpc.ServerStream
+}
+
+func (x *gophKeeperBinaryDownloadServer) Send(m *BinaryDownloadStream) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // GophKeeper_ServiceDesc is the grpc.ServiceDesc for GophKeeper service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1004,6 +1133,17 @@ var GophKeeper_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _GophKeeper_BinaryDelete_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "BinaryUpload",
+			Handler:       _GophKeeper_BinaryUpload_Handler,
+			ClientStreams: true,
+		},
+		{
+			StreamName:    "BinaryDownload",
+			Handler:       _GophKeeper_BinaryDownload_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "proto/v1/gophkeeper.proto",
 }

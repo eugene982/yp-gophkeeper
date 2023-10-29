@@ -30,6 +30,7 @@ var _ NoteUpdater = NoteUpdaterFunc(nil)
 
 type GRPCUpdateHandler func(context.Context, *pb.NoteUpdateRequest) (*empty.Empty, error)
 
+// NewGRPCUpdateHandler - функция конструктор ручки для обновления заметки
 func NewGRPCUpdateHandler(u NoteUpdater, getUserID handler.GetUserIDFunc, enc crypt.Encryptor) GRPCUpdateHandler {
 	return func(ctx context.Context, in *pb.NoteUpdateRequest) (*empty.Empty, error) {
 		var err error

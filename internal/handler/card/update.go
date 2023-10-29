@@ -30,6 +30,7 @@ var _ CardUpdater = CardUpdaterFunc(nil)
 
 type GRPCUpdateHandler func(context.Context, *pb.CardUpdateRequest) (*empty.Empty, error)
 
+// NewGRPCUpdateHandler - функция конструктор ручки для обновления карты
 func NewGRPCUpdateHandler(u CardUpdater, getUserID handler.GetUserIDFunc, enc crypt.Encryptor) GRPCUpdateHandler {
 	return func(ctx context.Context, in *pb.CardUpdateRequest) (*empty.Empty, error) {
 		var err error

@@ -27,6 +27,7 @@ var _ PasswordDeleter = PasswordDeleteFunc(nil)
 
 type GRPCDeleteHandler func(ctx context.Context, in *pb.PasswordDelRequest) (*empty.Empty, error)
 
+// NewGRPCDeleteHandler - функция-конструктор ручки удаления пароля
 func NewGRPCDeleteHandler(d PasswordDeleter, getUserID handler.GetUserIDFunc) GRPCDeleteHandler {
 	return func(ctx context.Context, in *pb.PasswordDelRequest) (*empty.Empty, error) {
 		userID, err := getUserID(ctx)

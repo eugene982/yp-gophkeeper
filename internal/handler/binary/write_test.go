@@ -61,12 +61,12 @@ func TestGRPCWriteHandler(t *testing.T) {
 
 		req := pb.BinaryWriteRequest{
 			Name:  "name",
-			Bin:   []byte("bin"),
+			Sise:  64,
 			Notes: "notes",
 		}
 
-		pw := BinaryWritterFunc(func(context.Context, storage.BinaryData) error {
-			return tcase.writeErr
+		pw := BinaryWritterFunc(func(context.Context, storage.BinaryData) (int64, error) {
+			return 1, tcase.writeErr
 		})
 
 		getUserID := handler.GetUserIDFunc(func(context.Context) (string, error) {

@@ -138,7 +138,7 @@ func init() {
 // Утверждение типа, ошибка компиляции
 var _ storage.Storage = (*PgxStore)(nil)
 
-// Функция открытия БД
+// Open - Функция открытия БД
 func (p *PgxStore) Open(db *sqlx.DB) error {
 
 	if err := createTablesIfNonExists(db); err != nil {
@@ -148,19 +148,20 @@ func (p *PgxStore) Open(db *sqlx.DB) error {
 	return nil
 }
 
-// Закрытие соединения
+// Close закрытие соединения
 func (p *PgxStore) Close() error {
 	return p.db.Close()
 }
 
-// Пинг к базе
+// Ping пинг к базе
 func (p *PgxStore) Ping(ctx context.Context) error {
 	return p.db.PingContext(ctx)
 }
 
 // WriteUser Установка уникального соответствия
 func (p *PgxStore) WriteUser(ctx context.Context, data storage.UserData) error {
-	return p.Write(ctx, data)
+	_, err := p.Write(ctx, data)
+	return err
 }
 
 // ReadUser Чтение данных пользователя
@@ -175,17 +176,19 @@ func (p *PgxStore) ReadUser(ctx context.Context, userID string) (res storage.Use
 	return
 }
 
-// читаем баланс пользователя
+// ReadList читаем баланс пользователя
 func (p *PgxStore) ReadList(ctx context.Context, userID string) (res storage.ListData, err error) {
 	query := `
 	SELECT
 		users.user_id AS user_id,
-		COUNT(notes.name) AS notes_count,
-		COUNT(cards.name) AS cards_count,
-		COUNT(passwords.name) AS passwords_count
+		COUNT(DISTINCT notes.id) AS notes_count,
+		COUNT(DISTINCT cards.id) AS cards_count,
+		COUNT(DISTINCT binaries.id) AS binaries_count,
+		COUNT(DISTINCT passwords.id) AS passwords_count
 	FROM users
 		LEFT JOIN notes ON users.user_id = notes.user_id
-		LEFT JOIN cards ON cards.user_id = notes.user_id
+		LEFT JOIN cards ON users.user_id = cards.user_id
+		LEFT JOIN binaries ON users.user_id = binaries.user_id
 		LEFT JOIN passwords ON users.user_id = passwords.user_id
 	WHERE 
 		users.user_id = $1
@@ -200,105 +203,128 @@ func (p *PgxStore) ReadList(ctx context.Context, userID string) (res storage.Lis
 
 // Passwords //
 
+// PasswordList список наименований паролей
 func (p *PgxStore) PasswordList(ctx context.Context, userID string) ([]string, error) {
 	return p.namesList(ctx, "passwords", userID)
 }
 
+// PasswordWrite запись нового пароля
 func (p *PgxStore) PasswordWrite(ctx context.Context, data storage.PasswordData) error {
-	return p.Write(ctx, data)
+	_, err := p.Write(ctx, data)
+	return err
 }
 
+// PasswordRead чтение пароля из базы
 func (p *PgxStore) PasswordRead(ctx context.Context, userID, name string) (res storage.PasswordData, err error) {
 	err = p.readFirstByName(ctx, &res, userID, name)
 	return
 }
 
+// PasswordDelete удаление пароля
 func (p *PgxStore) PasswordDelete(ctx context.Context, userID, name string) error {
 	return p.deleteByName(ctx, "passwords", userID, name)
 }
 
+// PasswordUpdate обновление пароля
 func (p *PgxStore) PasswordUpdate(ctx context.Context, data storage.PasswordData) error {
 	return p.Update(ctx, data)
 }
 
 // Cards //
 
+// CardList список наименований карт
 func (p *PgxStore) CardList(ctx context.Context, userID string) ([]string, error) {
 	return p.namesList(ctx, "cards", userID)
 }
 
+// CardWrite запись новой карты
 func (p *PgxStore) CardWrite(ctx context.Context, data storage.CardData) error {
-	return p.Write(ctx, data)
+	_, err := p.Write(ctx, data)
+	return err
 }
 
+// CardRead чтение карты
 func (p *PgxStore) CardRead(ctx context.Context, userID, name string) (res storage.CardData, err error) {
 	err = p.readFirstByName(ctx, &res, userID, name)
 	return
 }
 
+// CardDelete удаление карты
 func (p *PgxStore) CardDelete(ctx context.Context, userID, name string) (err error) {
 	err = p.deleteByName(ctx, "cards", userID, name)
 	return
 }
 
+// CardUpdate обновление сведений
 func (p *PgxStore) CardUpdate(ctx context.Context, data storage.CardData) error {
 	return p.Update(ctx, data)
 }
 
 // Notes //
 
+// NoteList список наименовайний заметок
 func (p *PgxStore) NoteList(ctx context.Context, userID string) ([]string, error) {
 	return p.namesList(ctx, "notes", userID)
 }
 
+// NoteWrite запись новой заметки в базу
 func (p *PgxStore) NoteWrite(ctx context.Context, data storage.NoteData) error {
-	return p.Write(ctx, data)
+	_, err := p.Write(ctx, data)
+	return err
 }
 
+// NoteRead чтение заметки
 func (p *PgxStore) NoteRead(ctx context.Context, userID, name string) (res storage.NoteData, err error) {
 	err = p.readFirstByName(ctx, &res, userID, name)
 	return
 }
 
+// NoteDelete удаление заметки
 func (p *PgxStore) NoteDelete(ctx context.Context, userID, name string) (err error) {
 	err = p.deleteByName(ctx, "notes", userID, name)
 	return
 }
 
+// NoteUpdate обновление заметки
 func (p *PgxStore) NoteUpdate(ctx context.Context, data storage.NoteData) error {
 	return p.Update(ctx, data)
 }
 
 // Binary //
 
+// BinaryList список наименований двоичных данных
 func (p *PgxStore) BinaryList(ctx context.Context, userID string) ([]string, error) {
 	return p.namesList(ctx, "binaries", userID)
 }
 
-func (p *PgxStore) BinaryWrite(ctx context.Context, data storage.BinaryData) error {
+// BinaryWrite запись нового бинарника
+func (p *PgxStore) BinaryWrite(ctx context.Context, data storage.BinaryData) (int64, error) {
 	return p.Write(ctx, data)
 }
 
+// BinaryRead чтение бинарных данных
 func (p *PgxStore) BinaryRead(ctx context.Context, userID, name string) (res storage.BinaryData, err error) {
 	err = p.readFirstByName(ctx, &res, userID, name)
 	return
 }
 
+// BinaryDelete удаление бинарника
 func (p *PgxStore) BinaryDelete(ctx context.Context, userID, name string) (err error) {
 	err = p.deleteByName(ctx, "binaries", userID, name)
 	return
 }
 
+// BinaryUpdate обновление бинарника
 func (p *PgxStore) BinaryUpdate(ctx context.Context, data storage.BinaryData) error {
 	return p.Update(ctx, data)
 }
 
 //
 
-func (p *PgxStore) Write(ctx context.Context, data any) error {
+func (p *PgxStore) Write(ctx context.Context, data any) (int64, error) {
 	tx, err := p.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer tx.Rollback()
 
@@ -315,13 +341,19 @@ func (p *PgxStore) Write(ctx context.Context, data any) error {
 	case storage.BinaryData:
 		query = writeQuery["binaries"]
 	default:
-		return errUnkmownDataType
+		return 0, errUnkmownDataType
 	}
 
-	if _, err = tx.NamedExecContext(ctx, query, data); err != nil {
-		return errWriteConflict(err)
+	res, err := tx.NamedExecContext(ctx, query, data)
+	if err != nil {
+		return 0, errWriteConflict(err)
 	}
-	return tx.Commit()
+
+	id, err := res.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+	return id, tx.Commit()
 }
 
 func (p *PgxStore) Update(ctx context.Context, data any) error {
@@ -363,8 +395,12 @@ func (p *PgxStore) deleteByName(ctx context.Context, tabname, userId, name strin
 	query := `DELETE FROM ` + tabname +
 		` WHERE user_id=$1 AND name=$2;`
 
-	if _, err = tx.ExecContext(ctx, query, userId, name); err != nil {
-		return errNoContent(err)
+	res, err := tx.ExecContext(ctx, query, userId, name)
+	if err != nil {
+		return err
+	}
+	if n, e := res.RowsAffected(); n == 0 && e == nil {
+		return storage.ErrNoContent
 	}
 	return tx.Commit()
 }

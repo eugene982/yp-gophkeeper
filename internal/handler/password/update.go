@@ -30,6 +30,7 @@ var _ PasswordUpdater = PasswordUpdaterFunc(nil)
 
 type GRPCUpdateHandler func(context.Context, *pb.PasswordUpdateRequest) (*empty.Empty, error)
 
+// NewGRPCUpdateHandler - функция конструктор ручки для обновления пароля
 func NewGRPCUpdateHandler(u PasswordUpdater, getUserID handler.GetUserIDFunc, enc crypt.Encryptor) GRPCUpdateHandler {
 	return func(ctx context.Context, in *pb.PasswordUpdateRequest) (*empty.Empty, error) {
 		var err error

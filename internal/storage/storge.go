@@ -9,12 +9,14 @@ import (
 )
 
 var (
+	// ошибки возвращаемяе при работе с хранилищем
 	ErrWriteConflict = errors.New("write conflict")
 	ErrNoContent     = errors.New("no content")
 )
 
 var database Storage
 
+// Open подключаемся к указанной базе
 func Open(dns string) (Storage, error) {
 
 	if dns == "" {
@@ -47,12 +49,12 @@ func Open(dns string) (Storage, error) {
 	return database, nil
 }
 
-// регистрируем подключенный драйвер
+// RegDriver регистрируем подключенный драйвер
 func RegDriver(db Storage) {
 	database = db
 }
 
-// Интерфейс для хранилища данных
+// Storage Интерфейс для хранилища данных
 type Storage interface {
 	Open(*sqlx.DB) error
 	Close() error
@@ -85,7 +87,7 @@ type Storage interface {
 	// Binary
 	BinaryList(ctx context.Context, userID string) ([]string, error)
 	BinaryRead(ctx context.Context, userID, name string) (BinaryData, error)
-	BinaryWrite(ctx context.Context, data BinaryData) error
+	BinaryWrite(ctx context.Context, data BinaryData) (int64, error)
 	BinaryDelete(ctx context.Context, userID, name string) error
 	BinaryUpdate(ctx context.Context, data BinaryData) error
 }

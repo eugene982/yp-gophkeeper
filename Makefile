@@ -39,7 +39,7 @@ buildsrv: tests staticcheck vet
 
 # client
 runcli:
-	go run cmd/grpcclient/*.go
+	go run cmd/grpcclient/*.go -l=debug
 
 # gRPC
 protoc: 

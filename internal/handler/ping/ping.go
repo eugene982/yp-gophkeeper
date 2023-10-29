@@ -26,7 +26,7 @@ func (f PingerFunc) Ping(ctx context.Context) error {
 
 var _ Pinger = PingerFunc(nil)
 
-// NewPingHandler
+// NewPingHandler - ручка проверки соединения до сервера
 func NewPingHandler(pinger Pinger) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 
@@ -44,7 +44,7 @@ func NewPingHandler(pinger Pinger) http.Handler {
 
 type GRPCHahdler func(context.Context, *empty.Empty) (*pb.PingResponse, error)
 
-// NewRPCPingHandler
+// NewRPCPingHandler - grpc ручка проверки соединения до сервера
 func NewRPCPingHandler(pinger Pinger) GRPCHahdler {
 
 	pingResp := pb.PingResponse{

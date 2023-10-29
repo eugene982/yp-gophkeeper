@@ -29,6 +29,7 @@ var _ NoteReader = NoteReaderFunc(nil)
 
 type GRPCReadHandler func(context.Context, *pb.NoteReadRequest) (*pb.NoteReadResponse, error)
 
+// NewGRPCReadHandler - функця-конструктор ручки чтения данных заметки
 func NewGRPCReadHandler(r NoteReader, getUserID handler.GetUserIDFunc, dec crypt.Decryptor) GRPCReadHandler {
 	return func(ctx context.Context, in *pb.NoteReadRequest) (*pb.NoteReadResponse, error) {
 		userID, err := getUserID(ctx)

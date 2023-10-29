@@ -27,6 +27,7 @@ var _ PasswordListGetter = PasswordListGetterFunc(nil)
 
 type GRPCListHandler func(ctx context.Context, in *empty.Empty) (*pb.PasswordListResponse, error)
 
+// NewGRPCListHandler - функция-конструктор ручки получения списка наименований паролей
 func NewGRPCListHandler(g PasswordListGetter, getUserID handler.GetUserIDFunc) GRPCListHandler {
 	return func(ctx context.Context, in *empty.Empty) (*pb.PasswordListResponse, error) {
 

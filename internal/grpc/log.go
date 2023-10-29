@@ -35,3 +35,27 @@ func loggerInterceptor(ctx context.Context, req any, info *grpc.UnaryServerInfo,
 
 	return
 }
+
+func loggerStreamInterceptor(srv any, stream grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	start := time.Now()
+
+	logger.Info("request",
+		"method", info.FullMethod)
+
+	//md, _ := metadata.FromIncomingContext(ctx)
+
+	// logger.Debug("incoming",
+	// 	"request", ,
+	// 	"metadata", md)
+
+	err := handler(srv, stream)
+
+	logger.Info("response",
+		"duration", time.Since(start),
+		"ok", err == nil)
+
+	logger.Debug("outgoing",
+		"error", err)
+
+	return err
+}

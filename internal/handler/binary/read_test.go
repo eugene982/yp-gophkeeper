@@ -71,7 +71,7 @@ func TestGRPCreadHandler(t *testing.T) {
 
 				res.Name = "name"
 				res.Notes = []byte("notes")
-				res.Bin = []byte("bin")
+				//res.Size = byte("bin")
 			}
 			return
 		})
@@ -102,7 +102,7 @@ func TestGRPCreadHandler(t *testing.T) {
 				assert.Equal(t, int32(1), resp.Id)
 				assert.Equal(t, "name", resp.Name)
 				assert.Equal(t, "notes", resp.Notes)
-				assert.Equal(t, []byte("bin"), resp.Bin)
+				assert.Equal(t, "64", resp.Size)
 
 			} else {
 				assert.Error(t, err)
