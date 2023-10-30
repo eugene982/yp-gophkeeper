@@ -36,7 +36,7 @@ func NewGRPCWriteHandler(w BinaryWritter, getUserID handler.GetUserIDFunc, enc c
 
 		write := storage.BinaryData{
 			Name: in.Name,
-			Sise: in.Sise,
+			Size: in.Size,
 		}
 
 		write.UserID, err = getUserID(ctx)
@@ -59,6 +59,6 @@ func NewGRPCWriteHandler(w BinaryWritter, getUserID handler.GetUserIDFunc, enc c
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 
-		return &pb.BinaryWriteResponse{Id: int32(id)}, nil
+		return &pb.BinaryWriteResponse{Id: id}, nil
 	}
 }

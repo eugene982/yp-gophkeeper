@@ -64,8 +64,9 @@ const (
 			id      SERIAL       PRIMARY KEY,
 			user_id VARCHAR(64)  NOT NULL,
 			name    VARCHAR(128) NOT NULL,
-			bin     BYTEA		 NOT NULL,
-			notes   BYTEA        NOT NULL
+			size    INT		 	 NOT NULL,
+			notes   BYTEA        NOT NULL,
+			bin_id  OID			 NOT NULL
 		);
 		CREATE INDEX IF NOT EXISTS binaries_user_id_idx 
 		ON binaries (user_id);
@@ -100,8 +101,8 @@ var (
 
 		// бинарники
 		"binaries": `INSERT INTO binaries
-			(user_id, name, bin, notes)
-		VALUES(:user_id, :name, :bin, :notes);`,
+			(user_id, name, size, notes, bin_id)
+		VALUES(:user_id, :name, :size, :notes, :bin_id);`,
 	}
 
 	updateQuery = map[string]string{ // запросы на обновление данных
@@ -160,8 +161,7 @@ func (p *PgxStore) Ping(ctx context.Context) error {
 
 // WriteUser Установка уникального соответствия
 func (p *PgxStore) WriteUser(ctx context.Context, data storage.UserData) error {
-	_, err := p.Write(ctx, data)
-	return err
+	return p.Write(ctx, data)
 }
 
 // ReadUser Чтение данных пользователя
@@ -210,8 +210,7 @@ func (p *PgxStore) PasswordList(ctx context.Context, userID string) ([]string, e
 
 // PasswordWrite запись нового пароля
 func (p *PgxStore) PasswordWrite(ctx context.Context, data storage.PasswordData) error {
-	_, err := p.Write(ctx, data)
-	return err
+	return p.Write(ctx, data)
 }
 
 // PasswordRead чтение пароля из базы
@@ -239,8 +238,7 @@ func (p *PgxStore) CardList(ctx context.Context, userID string) ([]string, error
 
 // CardWrite запись новой карты
 func (p *PgxStore) CardWrite(ctx context.Context, data storage.CardData) error {
-	_, err := p.Write(ctx, data)
-	return err
+	return p.Write(ctx, data)
 }
 
 // CardRead чтение карты
@@ -269,8 +267,7 @@ func (p *PgxStore) NoteList(ctx context.Context, userID string) ([]string, error
 
 // NoteWrite запись новой заметки в базу
 func (p *PgxStore) NoteWrite(ctx context.Context, data storage.NoteData) error {
-	_, err := p.Write(ctx, data)
-	return err
+	return p.Write(ctx, data)
 }
 
 // NoteRead чтение заметки
@@ -297,9 +294,25 @@ func (p *PgxStore) BinaryList(ctx context.Context, userID string) ([]string, err
 	return p.namesList(ctx, "binaries", userID)
 }
 
-// BinaryWrite запись нового бинарника
+// BinaryWrite запись нового бинарника, возвращаем идентификатор бинарника.
 func (p *PgxStore) BinaryWrite(ctx context.Context, data storage.BinaryData) (int64, error) {
-	return p.Write(ctx, data)
+	var err error
+
+	// Запросим новый идентификатор большого объекта
+	if data.BinID == 0 {
+		query := `SELECT lo_creat(-1)`
+		err = p.db.GetContext(ctx, &data.BinID, query)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	err = p.Write(ctx, data)
+	if err != nil {
+		return 0, errNoContent(err)
+	}
+
+	return data.BinID, errNoContent(err)
 }
 
 // BinaryRead чтение бинарных данных
@@ -316,15 +329,51 @@ func (p *PgxStore) BinaryDelete(ctx context.Context, userID, name string) (err e
 
 // BinaryUpdate обновление бинарника
 func (p *PgxStore) BinaryUpdate(ctx context.Context, data storage.BinaryData) error {
+	// 	create table images (id int, image oid);
+	// insert into images values (1, lo_import('/path/to/image.jpg'));
 	return p.Update(ctx, data)
+}
+
+// BinaryUpdate запись фрагмента бинарника в хранилище бинарника
+func (p *PgxStore) BinaryUpload(ctx context.Context, data storage.BinaryChunk) error {
+	tx, err := p.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	query := `SELECT lo_put(:bin_id, :offset, :chunk);`
+
+	_, err = tx.NamedExecContext(ctx, query, data)
+	if err != nil {
+		return errNoContent(err)
+	}
+	return tx.Commit()
+}
+
+// BinaryUpdate обновление бинарника
+func (p *PgxStore) BinaryDownload(ctx context.Context, data *storage.BinaryChunk) error {
+	tx, err := p.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	query := `SELECT lo_get($1, $2, $3);`
+
+	err = tx.GetContext(ctx, data.Chunk, query, data.BinID, data.Offset, cap(data.Chunk))
+	if err != nil {
+		return errNoContent(err)
+	}
+	return tx.Commit()
 }
 
 //
 
-func (p *PgxStore) Write(ctx context.Context, data any) (int64, error) {
+func (p *PgxStore) Write(ctx context.Context, data any) error {
 	tx, err := p.db.BeginTxx(ctx, nil)
 	if err != nil {
-		return 0, err
+		return err
 	}
 	defer tx.Rollback()
 
@@ -341,19 +390,15 @@ func (p *PgxStore) Write(ctx context.Context, data any) (int64, error) {
 	case storage.BinaryData:
 		query = writeQuery["binaries"]
 	default:
-		return 0, errUnkmownDataType
+		return errUnkmownDataType
 	}
 
-	res, err := tx.NamedExecContext(ctx, query, data)
+	_, err = tx.NamedExecContext(ctx, query, data)
 	if err != nil {
-		return 0, errWriteConflict(err)
+		return errWriteConflict(err)
 	}
 
-	id, err := res.LastInsertId()
-	if err != nil {
-		return 0, err
-	}
-	return id, tx.Commit()
+	return tx.Commit()
 }
 
 func (p *PgxStore) Update(ctx context.Context, data any) error {

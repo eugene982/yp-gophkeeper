@@ -38,7 +38,7 @@ func NewGRPCUpdateHandler(u BinaryUpdater, getUserID handler.GetUserIDFunc, enc 
 		upd := storage.BinaryData{
 			ID:   in.Id,
 			Name: in.Write.Name,
-			Sise: in.Write.Sise,
+			Size: in.Write.Size,
 		}
 
 		upd.UserID, err = getUserID(ctx)

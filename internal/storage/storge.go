@@ -90,4 +90,6 @@ type Storage interface {
 	BinaryWrite(ctx context.Context, data BinaryData) (int64, error)
 	BinaryDelete(ctx context.Context, userID, name string) error
 	BinaryUpdate(ctx context.Context, data BinaryData) error
+	BinaryUpload(ctx context.Context, data BinaryChunk) error
+	BinaryDownload(ctx context.Context, data *BinaryChunk) error
 }

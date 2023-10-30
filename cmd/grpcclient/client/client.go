@@ -243,7 +243,7 @@ func (c *Client) BinaryList() ([]string, error) {
 	return resp.Names, nil
 }
 
-func (c *Client) BinaryWrite(in *pb.BinaryWriteRequest) (int32, error) {
+func (c *Client) BinaryWrite(in *pb.BinaryWriteRequest) (int64, error) {
 	ctx := c.withToken(context.Background())
 	resp, err := c.client.BinaryWrite(ctx, in)
 	if err != nil {
@@ -279,36 +279,42 @@ func (c *Client) BinaryDelete(in *pb.BinaryDelRequest) error {
 	return err
 }
 
-func (c *Client) BinaryUpload(id int32, r io.Reader) error {
+func (c *Client) BinaryUpload(id int64, r io.Reader) error {
 	ctx := c.withToken(context.Background())
 	client, err := c.client.BinaryUpload(ctx)
 	if err != nil {
 		return err
 	}
 
+	chSize := 4096
 	upload := pb.BinaryUplodStream{
-		Chunk: make([]byte, 64),
+		Chunk: make([]byte, chSize),
 	}
 
 	var done bool
+
 	for !done {
 		n, err := r.Read(upload.Chunk)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
+				err = nil
 				done = true
+			} else {
+				break
 			}
-			return err
 		}
 
+		upload.Id = id
 		upload.Chunk = upload.Chunk[:n]
-		upload.Num++
 
 		err = client.Send(&upload)
 		if err != nil {
-			return err
+			break
 		}
 	}
-	_, err = client.CloseAndRecv()
+	if _, e := client.CloseAndRecv(); e != nil && err == nil {
+		err = e
+	}
 	return err
 }
 

@@ -385,19 +385,24 @@ func newFilesCmd(args []string) *command.Command {
 			if err != nil {
 				return err
 			}
+			fstat, err := file.Stat()
+			if err != nil {
+				return err
+			}
 			defer file.Close()
 
-			// резервируем идентификатор под файл
-			// in := pb.BinaryWriteRequest{
-			// 	Name:  filename,
-			// 	Notes: fields["notes"],
-			// }
+			//резервируем идентификатор под файл
+			in := pb.BinaryWriteRequest{
+				Name:  filename,
+				Notes: fields["notes"],
+				Size:  uint64(fstat.Size()),
+			}
 
-			// id, err := gkeeperClient.BinaryWrite(&in)
-			// if err != nil {
-			// 	return err
-			// }
-			return gkeeperClient.BinaryUpload(0, file)
+			id, err := gkeeperClient.BinaryWrite(&in)
+			if err != nil {
+				return err
+			}
+			return gkeeperClient.BinaryUpload(id, file)
 
 		}, subargs, "filename", "notes")
 

@@ -61,7 +61,7 @@ func TestGRPCWriteHandler(t *testing.T) {
 
 		req := pb.BinaryWriteRequest{
 			Name:  "name",
-			Sise:  64,
+			Size:  64,
 			Notes: "notes",
 		}
 

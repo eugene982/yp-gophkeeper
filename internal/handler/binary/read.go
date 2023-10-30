@@ -55,7 +55,7 @@ func NewGRPCReadHandler(r BinaryReader, getUserID handler.GetUserIDFunc, dec cry
 		resp := pb.BinaryReadResponse{
 			Id:    data.ID,
 			Name:  data.Name,
-			Size:  data.Sise,
+			Size:  data.Size,
 			Notes: string(notes),
 		}
 

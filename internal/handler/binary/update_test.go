@@ -68,7 +68,7 @@ func TestGRPCUpdateHandler(t *testing.T) {
 			Id: 1,
 			Write: &pb.BinaryWriteRequest{
 				Name:  "name",
-				Sise:  64,
+				Size:  64,
 				Notes: "notes",
 			},
 		}

@@ -2,10 +2,7 @@ package grpc
 
 import (
 	"context"
-	"fmt"
-	"io"
 	"net"
-	"os"
 	"time"
 
 	"github.com/bufbuild/protovalidate-go"
@@ -23,7 +20,6 @@ import (
 	"github.com/eugene982/yp-gophkeeper/internal/handler/password"
 	"github.com/eugene982/yp-gophkeeper/internal/handler/ping"
 	"github.com/eugene982/yp-gophkeeper/internal/handler/register"
-	"github.com/eugene982/yp-gophkeeper/internal/logger"
 	"github.com/eugene982/yp-gophkeeper/internal/storage"
 
 	crypt "github.com/eugene982/yp-gophkeeper/internal/crypto"
@@ -70,11 +66,13 @@ type GRPCServer struct {
 	noteUpdateHandler note.GRPCUpdateHandler
 
 	// binary
-	binaryListHandler   binary.GRPCListHandler
-	binaryWriteHandler  binary.GRPCWriteHandler
-	binaryReadHandler   binary.GRPCReadHandler
-	binaryDeleteHandler binary.GRPCDeleteHandler
-	binaryUpdateHandler binary.GRPCUpdateHandler
+	binaryListHandler     binary.GRPCListHandler
+	binaryWriteHandler    binary.GRPCWriteHandler
+	binaryReadHandler     binary.GRPCReadHandler
+	binaryDeleteHandler   binary.GRPCDeleteHandler
+	binaryUpdateHandler   binary.GRPCUpdateHandler
+	binaryUploadHandler   binary.GRPCUploadHandler
+	binaryDownloadHandler binary.GRPCDownloadHandler
 }
 
 // NewServer функция-коструктор нового grps сервера
@@ -159,6 +157,8 @@ func NewServer(store storage.Storage, crypt crypt.EncryptDecryptor, addr string)
 	srv.binaryReadHandler = binary.NewGRPCReadHandler(store, getUserID, crypt)
 	srv.binaryDeleteHandler = binary.NewGRPCDeleteHandler(store, getUserID)
 	srv.binaryUpdateHandler = binary.NewGRPCUpdateHandler(store, getUserID, crypt)
+	srv.binaryUploadHandler = binary.NewGRPCUploaderHandler(store)
+	srv.binaryDownloadHandler = binary.NewGRPCDownloadHandler(store)
 
 	// регистрируем сервис
 	pb.RegisterGophKeeperServer(srv.server, srv)
@@ -355,41 +355,15 @@ func (s GRPCServer) BinaryDelete(ctx context.Context, in *pb.BinaryDelRequest) (
 }
 
 func (s GRPCServer) BinaryUpload(us pb.GophKeeper_BinaryUploadServer) error {
-	//ctx := us.Context()
-
-	dirName := fmt.Sprintf("upload_tmp")
-	if err := os.MkdirAll(dirName, os.ModePerm); err != nil {
-		return err
+	if s.binaryUploadHandler != nil {
+		return s.binaryUploadHandler(us)
 	}
-
-	for {
-		upload, err := us.Recv()
-		if err != nil {
-			if err == io.EOF {
-				err = nil
-				break
-			}
-			logger.Debug("upload", "num", upload.Num)
-			logger.Debug("BinaryUpload", "err", err)
-			return err
-		}
-
-		fileName := fmt.Sprintf("%s/%d.bin", dirName, upload.Num)
-		file, err := os.Create(fileName)
-		if err != nil {
-			return err
-		}
-
-		_, err = file.Write(upload.Chunk)
-		file.Close()
-		if err != nil {
-			break
-		}
-	}
-
-	return nil //s.UnimplementedGophKeeperServer.BinaryUpload(us)
+	return s.UnimplementedGophKeeperServer.BinaryUpload(us)
 }
 
 func (s GRPCServer) BinaryDownload(req *pb.BidaryDownloadRequest, ds pb.GophKeeper_BinaryDownloadServer) error {
+	if s.binaryDownloadHandler != nil {
+		return s.binaryDownloadHandler(req, ds)
+	}
 	return s.UnimplementedGophKeeperServer.BinaryDownload(req, ds)
 }
