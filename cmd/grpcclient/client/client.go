@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -257,19 +256,14 @@ func (c *Client) BinaryRead(in *pb.BinaryReadRequest) (*pb.BinaryReadResponse, e
 	return c.client.BinaryRead(ctx, in)
 }
 
-func (c *Client) BinaryUpdate(name string, in *pb.BinaryWriteRequest) error {
+func (c *Client) BinaryUpdate(id int64, binID int64, in *pb.BinaryWriteRequest) error {
 	ctx := c.withToken(context.Background())
-	pass, err := c.client.BinaryRead(ctx, &pb.BinaryReadRequest{
-		Name: name,
-	})
-	if err != nil {
-		return err
-	}
 	req := pb.BinaryUpdateRequest{
-		Id:    pass.Id,
+		Id:    id,
+		BinId: binID,
 		Write: in,
 	}
-	_, err = c.client.BinaryUpdate(ctx, &req)
+	_, err := c.client.BinaryUpdate(ctx, &req)
 	return err
 }
 
@@ -291,29 +285,46 @@ func (c *Client) BinaryUpload(id int64, r io.Reader) error {
 		Chunk: make([]byte, chSize),
 	}
 
-	var done bool
-
-	for !done {
-		n, err := r.Read(upload.Chunk)
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				err = nil
-				done = true
-			} else {
-				break
-			}
+	for err == nil {
+		var n int
+		n, err = r.Read(upload.Chunk)
+		if n > 0 && (err == nil || err == io.EOF) {
+			upload.Id = id
+			upload.Chunk = upload.Chunk[:n]
+			err = client.Send(&upload)
 		}
-
-		upload.Id = id
-		upload.Chunk = upload.Chunk[:n]
-
-		err = client.Send(&upload)
-		if err != nil {
-			break
-		}
+	}
+	if err == io.EOF {
+		err = nil
 	}
 	if _, e := client.CloseAndRecv(); e != nil && err == nil {
 		err = e
+	}
+	return err
+}
+
+func (c *Client) BinaryDownload(id int64, w io.Writer) error {
+
+	ctx := c.withToken(context.Background())
+	req := pb.BidaryDownloadRequest{
+		Id: id,
+	}
+
+	download, err := c.client.BinaryDownload(ctx, &req)
+	if err != nil {
+		return err
+	}
+
+	for err == nil {
+		var stream *pb.BinaryDownloadStream
+		stream, err = download.Recv()
+		if err == nil {
+			logger.Debug("download", "err", err, "stream", stream)
+			_, err = w.Write(stream.Chunk)
+		}
+	}
+	if err == io.EOF {
+		return nil
 	}
 	return err
 }

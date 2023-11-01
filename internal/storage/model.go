@@ -50,7 +50,7 @@ type BinaryData struct {
 	ID     int64  `db:"id"`
 	UserID string `db:"user_id"`
 	Name   string `db:"name"`
-	Size   uint64 `db:"size"`
+	Size   int64  `db:"size"`
 	Notes  []byte `db:"notes"`
 	BinID  int64  `db:"bin_id"`
 }

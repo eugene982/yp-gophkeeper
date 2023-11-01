@@ -245,16 +245,17 @@ message BinaryReadRequest {
 }
 
 message BinaryReadResponse {
-    int64  id    = 1;
-    string name  = 2;
-    uint64 size  = 3;
-    string notes = 4;
+    int64  id     = 1;
+    string name   = 2;
+    int64  size   = 3;
+    int64  bin_id = 4;
+    string notes  = 5;
 }
 
 message BinaryWriteRequest {
     string name  = 1 [(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
-    uint64 size  = 2 [(buf.validate.field).uint64.gt = 1];
-    string notes = 3 [(buf.validate.field).string.min_len = 1];
+    int64  size  = 2 [(buf.validate.field).int64.gt = 1];
+    string notes = 3;
 }
 
 message BinaryDelRequest {
@@ -262,15 +263,16 @@ message BinaryDelRequest {
 }
 
 message BinaryUpdateRequest {
-    int64 id = 1;
-    BinaryWriteRequest write = 2; 
+    int64 id = 1 [(buf.validate.field).int64.gt = 0];
+    int64 bin_id = 2; 
+    BinaryWriteRequest write = 3; 
 }
 
 // Binary stream
 
 message BinaryUplodStream {
-    int64 id     = 1[(buf.validate.field).uint64.gt = 1];
-    bytes chunk  = 3[(buf.validate.field).bytes.min_len = 1];
+    int64 id     = 1 [(buf.validate.field).int64.gt = 0];
+    bytes chunk  = 3 [(buf.validate.field).bytes.min_len = 1];
 }
 
 message BidaryDownloadRequest {

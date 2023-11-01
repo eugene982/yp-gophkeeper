@@ -32,25 +32,28 @@ func NewGRPCUploaderHandler(u BinaryUploader) GRPCUploadHandler {
 			offset int
 		)
 
-		for {
-			stream, err := server.Recv()
-			if err != nil {
-				if err == io.EOF {
-					err = nil
-					break
-				}
+		var (
+			err    error
+			stream *pb.BinaryUplodStream
+		)
+		for err == nil {
+			stream, err = server.Recv()
+			if err == nil {
+				chunk.BinID = stream.Id
+				chunk.Chunk = stream.Chunk
+				chunk.Offset = int64(offset)
+				offset += len(chunk.Chunk)
+				u.BinaryUpload(server.Context(), chunk)
+			} else {
 				logger.Errorf("error upload binary: %w", err,
-					"id", stream.Id)
+					"id", stream)
 			}
-
-			chunk.BinID = stream.Id
-			chunk.Chunk = stream.Chunk
-			chunk.Offset = int64(offset)
-			offset += len(chunk.Chunk)
-
-			u.BinaryUpload(server.Context(), chunk)
 		}
 
+		if err != nil && err != io.EOF {
+			server.SendAndClose(&emptypb.Empty{})
+			return err
+		}
 		return server.SendAndClose(&emptypb.Empty{})
 	}
 }

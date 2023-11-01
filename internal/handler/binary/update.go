@@ -36,9 +36,10 @@ func NewGRPCUpdateHandler(u BinaryUpdater, getUserID handler.GetUserIDFunc, enc 
 		var err error
 
 		upd := storage.BinaryData{
-			ID:   in.Id,
-			Name: in.Write.Name,
-			Size: in.Write.Size,
+			ID:    in.Id,
+			BinID: in.BinId,
+			Name:  in.Write.Name,
+			Size:  in.Write.Size,
 		}
 
 		upd.UserID, err = getUserID(ctx)
@@ -48,7 +49,7 @@ func NewGRPCUpdateHandler(u BinaryUpdater, getUserID handler.GetUserIDFunc, enc 
 
 		upd.Notes, err = enc.Encrypt([]byte(in.Write.Notes))
 		if err != nil {
-			logger.Errorf("encrypt notes error: %w", err)
+			logger.Errorf("encrypt binary error: %w", err)
 			return nil, status.Error(codes.Internal, err.Error())
 		}
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/c-bata/go-prompt"
@@ -100,20 +101,12 @@ func executor(line string) {
 func completer(d prompt.Document) []prompt.Suggest {
 	var s []prompt.Suggest
 
-	switch d.Text {
-	case "user ":
-		for _, u := range gkeeperClient.GetUsers() {
-			s = append(s, prompt.Suggest{Text: u})
-		}
-	case "password ", "note ", "card ", "file ":
-		s = []prompt.Suggest{
-			{Text: "ls", Description: "показать список"},
-			{Text: "get", Description: "прочитать данные из хранилища"},
-			{Text: "new", Description: "добавить данные в хранилище"},
-			{Text: "upd", Description: "обновить данные"},
-			{Text: "del", Description: "удалить из хранилища"},
-		}
-	default:
+	words := strings.Split(strings.TrimLeft(d.Text, " "), " ")
+
+	//logger.Debug("completer", "words", words, "count", wordsCount)
+
+	switch len(words) {
+	case 0, 1:
 		s = []prompt.Suggest{
 			{Text: "exit", Description: "выход из клиента"},
 			{Text: "ping", Description: "проверка соединения"},
@@ -128,6 +121,21 @@ func completer(d prompt.Document) []prompt.Suggest {
 			{Text: "note", Description: "работа с хранилищем заметок"},
 			{Text: "card", Description: "работа с хранилищем карт"},
 			{Text: "file", Description: "работа с хранилищем файлов"},
+		}
+	case 2:
+		switch words[0] {
+		case "user":
+			for _, u := range gkeeperClient.GetUsers() {
+				s = append(s, prompt.Suggest{Text: u})
+			}
+		case "password", "note", "card", "file":
+			s = []prompt.Suggest{
+				{Text: "ls", Description: "показать список"},
+				{Text: "get", Description: "прочитать данные из хранилища"},
+				{Text: "new", Description: "добавить данные в хранилище"},
+				{Text: "upd", Description: "обновить данные"},
+				{Text: "del", Description: "удалить из хранилища"},
+			}
 		}
 	}
 
@@ -380,7 +388,7 @@ func newFilesCmd(args []string) *command.Command {
 
 	case "new":
 		return command.New(func(fields map[string]string) error {
-			filename := fields["filename"]
+			filename := fields["file"]
 			file, err := os.Open(filename)
 			if err != nil {
 				return err
@@ -391,11 +399,16 @@ func newFilesCmd(args []string) *command.Command {
 			}
 			defer file.Close()
 
+			name := fields["name"]
+			if name == "" {
+				name = path.Base(filename)
+			}
+
 			//резервируем идентификатор под файл
 			in := pb.BinaryWriteRequest{
-				Name:  filename,
+				Name:  name,
 				Notes: fields["notes"],
-				Size:  uint64(fstat.Size()),
+				Size:  fstat.Size(),
 			}
 
 			id, err := gkeeperClient.BinaryWrite(&in)
@@ -404,31 +417,90 @@ func newFilesCmd(args []string) *command.Command {
 			}
 			return gkeeperClient.BinaryUpload(id, file)
 
-		}, subargs, "filename", "notes")
+		}, subargs, "file", "name", "notes")
 
 	case "get":
 		return command.New(func(fields map[string]string) error {
-			return fmt.Errorf("not implement")
-			// in := pb.BinaryReadRequest{
-			// 	Name: fields["name"],
-			// }
-			// resp, err := gkeeperClient.BinaryRead(&in)
-			// if err == nil {
-			// 	fmt.Println("name:", resp.Name)
-			// 	fmt.Println("notes:", resp.Notes)
-			// }
-			//return err
-		}, subargs, "name", "save directory")
+			req := pb.BinaryReadRequest{
+				Name: fields["name"],
+			}
+
+			resp, err := gkeeperClient.BinaryRead(&req)
+			if err != nil {
+				return err
+			}
+			fmt.Println("name:", resp.Name)
+			fmt.Println("size:", resp.Size)
+			fmt.Println("notes:", resp.Notes)
+
+			filename := fields["save to file"]
+			if filename == "" {
+				filename = resp.Name
+			}
+			file, err := os.Create(filename)
+			if err != nil {
+				return err
+			}
+			defer file.Close()
+
+			err = gkeeperClient.BinaryDownload(resp.BinId, file)
+			return err
+		}, subargs, "name", "save to file")
 
 	case "upd":
 		return command.New(func(fields map[string]string) error {
-			return fmt.Errorf("not implement")
-			// in := pb.BinaryWriteRequest{
-			// 	Name:  fields["new name"],
-			// 	Notes: fields["new notes"],
-			// }
-			// return gkeeperClient.BinaryUpdate(fields["name"], &in)
-		}, subargs, "name", "new name", "new notes")
+			req := pb.BinaryReadRequest{
+				Name: fields["name"],
+			}
+
+			resp, err := gkeeperClient.BinaryRead(&req)
+			if err != nil {
+				return err
+			}
+
+			upd := pb.BinaryWriteRequest{
+				Name:  fields["new name"],
+				Notes: fields["new notes"],
+				Size:  resp.Size,
+			}
+			if upd.Name == "" {
+				upd.Name = resp.Name
+			}
+			if upd.Notes == "" {
+				upd.Notes = resp.Notes
+			}
+
+			var (
+				file  *os.File
+				binID int64
+			)
+			filename := fields["new file"]
+
+			if filename != "" {
+				binID = resp.BinId
+				file, err = os.Open(filename)
+				if err != nil {
+					return err
+				}
+				fstat, err := file.Stat()
+				if err != nil {
+					return err
+				}
+				defer file.Close()
+				upd.Size = fstat.Size()
+			}
+
+			err = gkeeperClient.BinaryUpdate(resp.Id, binID, &upd)
+			if err != nil {
+				return err
+			}
+
+			if file != nil {
+				return gkeeperClient.BinaryUpload(resp.BinId, file)
+			}
+			return nil
+
+		}, subargs, "name", "new file", "new name", "new notes")
 
 	case "del":
 		return command.New(func(fields map[string]string) error {
@@ -461,6 +533,7 @@ func newPasswordsCmd(args []string) *command.Command {
 	}
 
 	switch subcmd {
+	// Список паролей
 	case "", "ls", "list":
 		return command.New(func(m map[string]string) error {
 			names, err := gkeeperClient.PasswordList()
@@ -473,6 +546,7 @@ func newPasswordsCmd(args []string) *command.Command {
 			}
 			return nil
 		}, subargs)
+	// Создание нового
 	case "new":
 		return command.New(func(fields map[string]string) error {
 			in := pb.PasswordWriteRequest{
@@ -483,6 +557,7 @@ func newPasswordsCmd(args []string) *command.Command {
 			}
 			return gkeeperClient.PasswordWrite(&in)
 		}, subargs, "name", "username", "password", "notes")
+	// получение
 	case "get":
 		return command.New(func(fields map[string]string) error {
 			in := pb.PasswordReadRequest{
@@ -497,6 +572,7 @@ func newPasswordsCmd(args []string) *command.Command {
 			}
 			return err
 		}, subargs, "name")
+	// обновление
 	case "upd":
 		return command.New(func(fields map[string]string) error {
 			in := pb.PasswordWriteRequest{
@@ -507,6 +583,7 @@ func newPasswordsCmd(args []string) *command.Command {
 			}
 			return gkeeperClient.PasswordUpdate(fields["name"], &in)
 		}, subargs, "name", "new name", "new username", "new password", "new notes")
+	// Удаление
 	case "del":
 		return command.New(func(fields map[string]string) error {
 			in := pb.PasswordDelRequest{

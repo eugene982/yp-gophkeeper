@@ -41,6 +41,7 @@ func NewGRPCDownloadHandler(d BinaryDownloader) GRPCDownloadHandler {
 		}
 
 		for !done {
+			data.Offset += int64(len(data.Chunk))
 			data.Chunk = data.Chunk[:0]
 			err = d.BinaryDownload(server.Context(), &data)
 			if err != nil || len(data.Chunk) == 0 {
@@ -59,7 +60,7 @@ func NewGRPCDownloadHandler(d BinaryDownloader) GRPCDownloadHandler {
 		if errors.Is(err, storage.ErrNoContent) {
 			return status.Error(codes.AlreadyExists, err.Error())
 		} else if err != nil {
-			logger.Errorf("write note error: %w", err)
+			logger.Errorf("download binary error: %w", err)
 			return status.Error(codes.Internal, err.Error())
 		}
 		return nil

@@ -123,7 +123,7 @@ var (
 		WHERE id=:id;`,
 
 		"binaries": `UPDATE binaries 
-		SET user_id=:user_id, name=:name, bin=:bin, notes=:notes  
+		SET user_id=:user_id, name=:name, size=:size, notes=:notes  
 		WHERE id=:id;`,
 	}
 )
@@ -323,15 +323,59 @@ func (p *PgxStore) BinaryRead(ctx context.Context, userID, name string) (res sto
 
 // BinaryDelete удаление бинарника
 func (p *PgxStore) BinaryDelete(ctx context.Context, userID, name string) (err error) {
+	tx, err := p.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	query := `SELECT lo_unlink(bin_id) 
+		FROM binaries WHERE user_id=$1 AND name=$2`
+
+	_, err = tx.ExecContext(ctx, query, userID, name)
+	if err != nil {
+		return err
+	}
 	err = p.deleteByName(ctx, "binaries", userID, name)
-	return
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
 
 // BinaryUpdate обновление бинарника
 func (p *PgxStore) BinaryUpdate(ctx context.Context, data storage.BinaryData) error {
-	// 	create table images (id int, image oid);
-	// insert into images values (1, lo_import('/path/to/image.jpg'));
-	return p.Update(ctx, data)
+	var (
+		err error
+		tx  *sqlx.Tx
+	)
+
+	if data.BinID != 0 {
+		tx, err = p.db.BeginTxx(ctx, nil)
+		if err != nil {
+			return err
+		}
+		defer tx.Rollback()
+
+		_, err = tx.ExecContext(ctx, "SELECT lo_unlink($1)", data.BinID)
+		if err != nil {
+			return err
+		}
+		_, err = tx.ExecContext(ctx, "SELECT lo_create($1)", data.BinID)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = p.Update(ctx, data)
+	if err != nil {
+		return err
+	}
+	if tx != nil {
+		return tx.Commit()
+	}
+	return nil
 }
 
 // BinaryUpdate запись фрагмента бинарника в хранилище бинарника
@@ -361,7 +405,7 @@ func (p *PgxStore) BinaryDownload(ctx context.Context, data *storage.BinaryChunk
 
 	query := `SELECT lo_get($1, $2, $3);`
 
-	err = tx.GetContext(ctx, data.Chunk, query, data.BinID, data.Offset, cap(data.Chunk))
+	err = tx.GetContext(ctx, &data.Chunk, query, data.BinID, data.Offset, cap(data.Chunk))
 	if err != nil {
 		return errNoContent(err)
 	}
@@ -419,7 +463,7 @@ func (p *PgxStore) Update(ctx context.Context, data any) error {
 	case storage.NoteData:
 		query = updateQuery["notes"]
 	case storage.BinaryData:
-		query = writeQuery["binaries"]
+		query = updateQuery["binaries"]
 	default:
 		return errUnkmownDataType
 	}
@@ -474,6 +518,8 @@ func (p *PgxStore) readFirstByName(ctx context.Context, res any, userID, name st
 		tabname = "notes"
 	case *storage.PasswordData:
 		tabname = "passwords"
+	case *storage.BinaryData:
+		tabname = "binaries"
 	default:
 		return errUnkmownDataType
 	}
