@@ -4,7 +4,7 @@ import (
 	"github.com/eugene982/yp-gophkeeper/internal/config"
 	crypt "github.com/eugene982/yp-gophkeeper/internal/crypto"
 	aescrypt "github.com/eugene982/yp-gophkeeper/internal/crypto/aes"
-	"github.com/eugene982/yp-gophkeeper/internal/grpc"
+	grpc_v1 "github.com/eugene982/yp-gophkeeper/internal/grpc/v1"
 
 	"github.com/eugene982/yp-gophkeeper/internal/storage"
 	_ "github.com/eugene982/yp-gophkeeper/internal/storage/postgres"
@@ -12,7 +12,7 @@ import (
 
 // Application структура основного приложения
 type Application struct {
-	grpcServer *grpc.GRPCServer
+	grpcServer *grpc_v1.GRPCServer
 	storage    storage.Storage
 	crypt      crypt.EncryptDecryptor
 }
@@ -29,12 +29,12 @@ func New(conf config.Config) (*Application, error) {
 		return nil, err
 	}
 
-	app.crypt, err = aescrypt.New(grpc.CRYPTO_KEY)
+	app.crypt, err = aescrypt.New(grpc_v1.CRYPTO_KEY)
 	if err != nil {
 		return nil, err
 	}
 
-	app.grpcServer, err = grpc.NewServer(app.storage, app.crypt, conf.ServerAddres)
+	app.grpcServer, err = grpc_v1.NewServer(app.storage, app.crypt, conf.ServerAddres)
 	if err != nil {
 		return nil, err
 	}

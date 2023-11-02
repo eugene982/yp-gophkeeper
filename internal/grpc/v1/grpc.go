@@ -11,18 +11,18 @@ import (
 	"google.golang.org/grpc"
 
 	pb "github.com/eugene982/yp-gophkeeper/gen/go/proto/v1"
-	"github.com/eugene982/yp-gophkeeper/internal/handler"
-	"github.com/eugene982/yp-gophkeeper/internal/handler/binary"
-	"github.com/eugene982/yp-gophkeeper/internal/handler/card"
-	"github.com/eugene982/yp-gophkeeper/internal/handler/list"
-	"github.com/eugene982/yp-gophkeeper/internal/handler/login"
-	"github.com/eugene982/yp-gophkeeper/internal/handler/note"
-	"github.com/eugene982/yp-gophkeeper/internal/handler/password"
-	"github.com/eugene982/yp-gophkeeper/internal/handler/ping"
-	"github.com/eugene982/yp-gophkeeper/internal/handler/register"
+	crypt "github.com/eugene982/yp-gophkeeper/internal/crypto"
 	"github.com/eugene982/yp-gophkeeper/internal/storage"
 
-	crypt "github.com/eugene982/yp-gophkeeper/internal/crypto"
+	"github.com/eugene982/yp-gophkeeper/internal/handler"
+	"github.com/eugene982/yp-gophkeeper/internal/handler/v1/binary"
+	"github.com/eugene982/yp-gophkeeper/internal/handler/v1/card"
+	"github.com/eugene982/yp-gophkeeper/internal/handler/v1/list"
+	"github.com/eugene982/yp-gophkeeper/internal/handler/v1/login"
+	"github.com/eugene982/yp-gophkeeper/internal/handler/v1/note"
+	"github.com/eugene982/yp-gophkeeper/internal/handler/v1/password"
+	"github.com/eugene982/yp-gophkeeper/internal/handler/v1/ping"
+	"github.com/eugene982/yp-gophkeeper/internal/handler/v1/register"
 )
 
 var (

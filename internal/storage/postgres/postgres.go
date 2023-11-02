@@ -14,67 +14,6 @@ import (
 	"github.com/eugene982/yp-gophkeeper/internal/storage"
 )
 
-const (
-	// текст запроса создания таблиц
-	createQuery = `
-		CREATE TABLE IF NOT EXISTS users (
-			user_id     VARCHAR(64) PRIMARY KEY,
-			passwd_hash TEXT        NOT NULL
-		);
-
-		CREATE TABLE IF NOT EXISTS passwords (
-			id          SERIAL       PRIMARY KEY,
-			user_id     VARCHAR(64)  NOT NULL,
-			name	    VARCHAR(128) NOT NULL,			
-			username    BYTEA        NOT NULL,
-			password    BYTEA        NOT NULL,
-			notes       BYTEA        NOT NULL
-		);
-		CREATE INDEX IF NOT EXISTS passwords_user_id_idx 
-		ON passwords (user_id);
-		CREATE UNIQUE INDEX IF NOT EXISTS passwords_user_id_name_idx 
-		ON passwords (user_id, name);	
-
-
-		CREATE TABLE IF NOT EXISTS notes (
-			id      SERIAL       PRIMARY KEY,
-			user_id VARCHAR(64)  NOT NULL,
-			name	VARCHAR(128) NOT NULL,
-			notes   BYTEA        NOT NULL
-		);
-		CREATE INDEX IF NOT EXISTS notes_user_id_idx 
-		ON notes (user_id);
-		CREATE UNIQUE INDEX IF NOT EXISTS notes_user_id_name_idx 
-		ON notes (user_id, name);	
-		
-		CREATE TABLE IF NOT EXISTS cards (
-			id      SERIAL       PRIMARY KEY,
-			user_id VARCHAR(64)  NOT NULL,
-			name    VARCHAR(128) NOT NULL,
-			number  BYTEA		 NOT NULL,
-			pin     BYTEA        NOT NULL,	 
-			notes   BYTEA        NOT NULL
-		);
-		CREATE INDEX IF NOT EXISTS cards_user_id_idx 
-		ON cards (user_id);
-		CREATE UNIQUE INDEX IF NOT EXISTS cards_user_id_name_idx 
-		ON cards (user_id, name);
-
-		CREATE TABLE IF NOT EXISTS binaries (
-			id      SERIAL       PRIMARY KEY,
-			user_id VARCHAR(64)  NOT NULL,
-			name    VARCHAR(128) NOT NULL,
-			size    INT		 	 NOT NULL,
-			notes   BYTEA        NOT NULL,
-			bin_id  OID			 NOT NULL
-		);
-		CREATE INDEX IF NOT EXISTS binaries_user_id_idx 
-		ON binaries (user_id);
-		CREATE UNIQUE INDEX IF NOT EXISTS binaries_user_id_name_idx
-		ON binaries (user_id, name);
-		`
-)
-
 var (
 	errUnkmownDataType = errors.New("unknown data type")
 
@@ -107,23 +46,23 @@ var (
 
 	updateQuery = map[string]string{ // запросы на обновление данных
 		"users": `UPDATE users 
-		SET user_id=:user_id, passwd_hash=:passwd_hash  
+		SET user_id=:user_id, passwd_hash=:passwd_hash, update_at=now()   
 		WHERE user_id=:user_id;`,
 
 		"passwords": `UPDATE passwords 
-		SET user_id=:user_id, name=:name, username=:username, password=:password, notes=:notes  
+		SET user_id=:user_id, name=:name, username=:username, password=:password, notes=:notes, update_at=now()   
 		WHERE id=:id;`,
 
 		"cards": `UPDATE cards 
-		SET user_id=:user_id, name=:name, number=:number, notes=:notes  
+		SET user_id=:user_id, name=:name, number=:number, notes=:notes, update_at=now()   
 		WHERE id=:id;`,
 
 		"notes": `UPDATE notes 
-		SET user_id=:user_id, name=:name, notes=:notes  
+		SET user_id=:user_id, name=:name, notes=:notes, update_at=now()  
 		WHERE id=:id;`,
 
 		"binaries": `UPDATE binaries 
-		SET user_id=:user_id, name=:name, size=:size, notes=:notes  
+		SET user_id=:user_id, name=:name, size=:size, notes=:notes, update_at=now()   
 		WHERE id=:id;`,
 	}
 )
@@ -141,10 +80,6 @@ var _ storage.Storage = (*PgxStore)(nil)
 
 // Open - Функция открытия БД
 func (p *PgxStore) Open(db *sqlx.DB) error {
-
-	if err := createTablesIfNonExists(db); err != nil {
-		return err
-	}
 	p.db = db
 	return nil
 }
@@ -529,12 +464,6 @@ func (p *PgxStore) readFirstByName(ctx context.Context, res any, userID, name st
 
 	err := p.db.GetContext(ctx, res, query, userID, name)
 	return errNoContent(err)
-}
-
-// При первом запуске база может быть пустая
-func createTablesIfNonExists(db *sqlx.DB) error {
-	_, err := db.Exec(createQuery)
-	return err
 }
 
 func errWriteConflict(err error) error {

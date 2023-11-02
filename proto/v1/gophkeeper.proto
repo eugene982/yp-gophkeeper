@@ -5,7 +5,7 @@ import "buf/validate/validate.proto";
 
 package gophermart.v1;
 
-option go_package = "github.com/eugene982/yp-gophermart/proto";
+option go_package = "github.com/eugene982/yp-gophermart/gen/go/proto/v1;pb_v1";
 
 service GophKeeper {
     // Ping проверка соединения

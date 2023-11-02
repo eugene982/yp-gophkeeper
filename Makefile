@@ -1,10 +1,12 @@
-BUILD_VERSION="v0.0.1"
+BUILD_VERSION="v0.0.2"
 BUILD_DATE=$(shell date +"%Y/%m/%d %H:%M")
 BUILD_COMMIT=$(shell git rev-parse HEAD)
 
 export PATH := $(PATH):$(shell go env GOPATH)/bin
 
 BIN_PATH=./bin/gophkeeper
+
+DATABASE_DSN="postgres://test:test@localhost/gophkeeper_test"
 
 gofmt:
 	gofmt -s -l . 	
@@ -28,9 +30,9 @@ golangci-lint:
 runsvr:
 	go run -ldflags \
 		"-X main.buildVersion=$(BUILD_VERSION) -X 'main.buildDate=$(BUILD_DATE)' -X 'main.buildCommit=$(BUILD_COMMIT)' "\
-		cmd/gophkeeper/*.go
+		cmd/gophkeeper/*.go -d $(DATABASE_DSN) 
 
-buildsrv: tests staticcheck vet
+buildsrv: staticcheck vet
 	go build -o $(BIN_PATH) \
 		-ldflags \
 		"-X main.buildVersion=$(BUILD_VERSION) -X 'main.buildDate=$(BUILD_DATE)' -X 'main.buildCommit="$(BUILD_COMMIT)"' "\
@@ -46,3 +48,13 @@ protoc:
 	protoc --go_out=gen/go --go_opt=paths=source_relative \
 	--go-grpc_out=gen/go --go-grpc_opt=paths=source_relative \
 	proto/v1/gophkeeper.proto
+
+# migrationc
+migrate-create:
+	migrate create -ext sql -dir db/migrations -seq init schema
+
+migrate-up:
+	migrate -database $(DATABASE_DSN) -path db/migrations up
+
+migrate-down:
+	migrate -database $(DATABASE_DSN) -path db/migrations down
