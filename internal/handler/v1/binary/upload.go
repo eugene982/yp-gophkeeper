@@ -49,8 +49,10 @@ func NewGRPCUploaderHandler(u BinaryUploader) GRPCUploadHandler {
 					"id", stream)
 			}
 		}
-
-		if err != nil && err != io.EOF {
+		if err == io.EOF {
+			err = nil
+		}
+		if err != nil {
 			server.SendAndClose(&emptypb.Empty{})
 			return err
 		}

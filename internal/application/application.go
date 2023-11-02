@@ -29,7 +29,7 @@ func New(conf config.Config) (*Application, error) {
 		return nil, err
 	}
 
-	app.crypt, err = aescrypt.New(grpc_v1.CRYPTO_KEY)
+	app.crypt, err = aescrypt.New(grpc_v1.CryptoKey)
 	if err != nil {
 		return nil, err
 	}

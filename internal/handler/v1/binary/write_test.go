@@ -17,7 +17,6 @@ import (
 
 func TestGRPCWriteHandler(t *testing.T) {
 
-	binaryEncErr := errors.New("bin encrypt error")
 	notesEncErr := errors.New("notes encrypt error")
 
 	tests := []struct {
@@ -46,11 +45,6 @@ func TestGRPCWriteHandler(t *testing.T) {
 			writeErr:   storage.ErrWriteConflict,
 		},
 		{
-			name:       binaryEncErr.Error(),
-			wantStatus: codes.Internal,
-			ecnErr:     binaryEncErr,
-		},
-		{
 			name:       notesEncErr.Error(),
 			wantStatus: codes.Internal,
 			ecnErr:     notesEncErr,
@@ -77,9 +71,6 @@ func TestGRPCWriteHandler(t *testing.T) {
 		})
 
 		enc := crypt.EncryptFunc(func(text []byte) ([]byte, error) {
-			if tcase.ecnErr == binaryEncErr && string(text) == "bin" {
-				return nil, tcase.ecnErr
-			}
 			if tcase.ecnErr == notesEncErr && string(text) == "notes" {
 				return nil, tcase.ecnErr
 			}

@@ -88,7 +88,7 @@ func TestGRPCreadHandler(t *testing.T) {
 			if tcase.wantStatus == 0 {
 				assert.NoError(t, err)
 
-				assert.Equal(t, int32(1), resp.Id)
+				assert.Equal(t, int64(1), resp.Id)
 				assert.Equal(t, "name", resp.Name)
 				assert.Equal(t, "notes", resp.Notes)
 

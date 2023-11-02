@@ -17,7 +17,6 @@ import (
 
 func TestGRPCreadHandler(t *testing.T) {
 
-	binDecErr := errors.New("bin decrypt error")
 	notesDecErr := errors.New("notes decrypt error")
 
 	tests := []struct {
@@ -46,11 +45,6 @@ func TestGRPCreadHandler(t *testing.T) {
 			readErr:    storage.ErrNoContent,
 		},
 		{
-			name:       binDecErr.Error(),
-			wantStatus: codes.Internal,
-			decErr:     binDecErr,
-		},
-		{
 			name:       notesDecErr.Error(),
 			wantStatus: codes.Internal,
 			decErr:     notesDecErr,
@@ -67,11 +61,12 @@ func TestGRPCreadHandler(t *testing.T) {
 			err = tcase.readErr
 			if err == nil {
 				res.ID = 1
+				res.BinID = 2
 				res.UserID = "user_id"
 
 				res.Name = "name"
 				res.Notes = []byte("notes")
-				//res.Size = byte("bin")
+				res.Size = 64
 			}
 			return
 		})
@@ -84,9 +79,6 @@ func TestGRPCreadHandler(t *testing.T) {
 		})
 
 		dec := crypt.DecryptFunc(func(text []byte) ([]byte, error) {
-			if tcase.decErr == binDecErr && string(text) == "bin" {
-				return nil, tcase.decErr
-			}
 			if tcase.decErr == notesDecErr && string(text) == "notes" {
 				return nil, tcase.decErr
 			}
@@ -99,10 +91,11 @@ func TestGRPCreadHandler(t *testing.T) {
 			if tcase.wantStatus == 0 {
 				assert.NoError(t, err)
 
-				assert.Equal(t, int32(1), resp.Id)
+				assert.Equal(t, int64(1), resp.Id)
+				assert.Equal(t, int64(2), resp.BinId)
 				assert.Equal(t, "name", resp.Name)
 				assert.Equal(t, "notes", resp.Notes)
-				assert.Equal(t, "64", resp.Size)
+				assert.Equal(t, int64(64), resp.Size)
 
 			} else {
 				assert.Error(t, err)

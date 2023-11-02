@@ -17,7 +17,6 @@ import (
 
 func TestGRPCUpdateHandler(t *testing.T) {
 
-	binEncErr := errors.New("bin encrypt error")
 	notesEncErr := errors.New("notes encrypt error")
 
 	tests := []struct {
@@ -51,11 +50,6 @@ func TestGRPCUpdateHandler(t *testing.T) {
 			updErr:     storage.ErrNoContent,
 		},
 		{
-			name:       binEncErr.Error(),
-			wantStatus: codes.Internal,
-			ecnErr:     binEncErr,
-		},
-		{
 			name:       notesEncErr.Error(),
 			wantStatus: codes.Internal,
 			ecnErr:     notesEncErr,
@@ -65,7 +59,8 @@ func TestGRPCUpdateHandler(t *testing.T) {
 	for _, tcase := range tests {
 
 		req := pb.BinaryUpdateRequest{
-			Id: 1,
+			Id:    1,
+			BinId: 2,
 			Write: &pb.BinaryWriteRequest{
 				Name:  "name",
 				Size:  64,

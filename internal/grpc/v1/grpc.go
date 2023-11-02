@@ -26,10 +26,10 @@ import (
 )
 
 var (
-	TOKEN_SECRET_KEY = "sekret=key"
-	TOKEN_EXP        = time.Hour
-	PASSWORD_SALT    = "password=salt"
-	CRYPTO_KEY       = []byte("GopherKeeperKey!") // 16, 24, 34 байта
+	TokenSecretKey = "sekret=key"
+	TokenExp       = time.Hour
+	PasswordSalt   = "password=salt"
+	CryptoKey      = []byte("GopherKeeperKey!") // 16, 24, 34 байта
 )
 
 type GRPCServer struct {
@@ -108,20 +108,20 @@ func NewServer(store storage.Storage, crypt crypt.EncryptDecryptor, addr string)
 
 	// Функция хеширования паролей
 	hashFn := func(passwd string) (string, error) {
-		return handler.PasswordHash(passwd, PASSWORD_SALT)
+		return handler.PasswordHash(passwd, PasswordSalt)
 	}
 	// Функция генерирования токена
 	tokenFn := func(userId string) (string, error) {
-		return handler.MakeToken(userId, TOKEN_SECRET_KEY, TOKEN_EXP)
+		return handler.MakeToken(userId, TokenSecretKey, TokenExp)
 	}
 	// Функция сравнения хеша и пароля пользователя
 	checkFn := func(password, hash string) bool {
-		return handler.CheckPasswordHash(hash, password, PASSWORD_SALT)
+		return handler.CheckPasswordHash(hash, password, PasswordSalt)
 	}
 
 	// Функция вытаскивания ид. пользователя из контекста
 	getUserID := func(ctx context.Context) (string, error) {
-		return handler.GetUserIDFromMD(ctx, TOKEN_SECRET_KEY)
+		return handler.GetUserIDFromMD(ctx, TokenSecretKey)
 	}
 
 	// Подключаем ручки

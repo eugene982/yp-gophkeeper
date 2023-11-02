@@ -5,8 +5,8 @@ BUILD_COMMIT=$(shell git rev-parse HEAD)
 export PATH := $(PATH):$(shell go env GOPATH)/bin
 
 BIN_PATH=./bin/gophkeeper
-
 DATABASE_DSN="postgres://test:test@localhost/gophkeeper_test"
+VET_TOOL=./bin/statictest
 
 gofmt:
 	gofmt -s -l . 	
@@ -15,7 +15,10 @@ test:
 	go test -race ./...
 
 vet:
-	go vet ./... 
+	go vet ./...
+
+vettool:
+	go vet -vettool=$$(which $(VET_TOOL)) ./... 
 
 staticcheck:
 	staticcheck ./...

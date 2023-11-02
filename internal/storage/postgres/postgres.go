@@ -409,7 +409,7 @@ func (p *PgxStore) Update(ctx context.Context, data any) error {
 	return tx.Commit()
 }
 
-func (p *PgxStore) deleteByName(ctx context.Context, tabname, userId, name string) error {
+func (p *PgxStore) deleteByName(ctx context.Context, tabname, userID, name string) error {
 	tx, err := p.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return err
@@ -419,7 +419,7 @@ func (p *PgxStore) deleteByName(ctx context.Context, tabname, userId, name strin
 	query := `DELETE FROM ` + tabname +
 		` WHERE user_id=$1 AND name=$2;`
 
-	res, err := tx.ExecContext(ctx, query, userId, name)
+	res, err := tx.ExecContext(ctx, query, userID, name)
 	if err != nil {
 		return err
 	}

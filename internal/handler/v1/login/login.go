@@ -18,8 +18,8 @@ type UserReader interface {
 
 type UserReaderFunc func(context.Context, string) (storage.UserData, error)
 
-func (f UserReaderFunc) ReadUser(ctx context.Context, userId string) (storage.UserData, error) {
-	return f(ctx, userId)
+func (f UserReaderFunc) ReadUser(ctx context.Context, userID string) (storage.UserData, error) {
+	return f(ctx, userID)
 }
 
 var _ UserReader = UserReaderFunc(nil)

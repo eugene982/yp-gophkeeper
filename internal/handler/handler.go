@@ -20,7 +20,7 @@ var (
 type GetUserIDFunc func(context.Context) (string, error)
 
 // GetUserIDFromMD функция получает идентификатор пользователя из токена
-func GetUserIDFromMD(ctx context.Context, secret_key string) (string, error) {
+func GetUserIDFromMD(ctx context.Context, secretKey string) (string, error) {
 	var token string
 
 	if md, ok := metadata.FromIncomingContext(ctx); !ok {
@@ -31,7 +31,7 @@ func GetUserIDFromMD(ctx context.Context, secret_key string) (string, error) {
 		return "", ErrRPCInvalidToken
 	}
 
-	userID, err := GetUserID(token, secret_key)
+	userID, err := GetUserID(token, secretKey)
 	if err != nil {
 		return "", ErrRPCInvalidToken
 	}
@@ -61,7 +61,7 @@ type claims struct {
 }
 
 // MakeToken cоздаёт токен и возвращает его в виде строки.
-func MakeToken(userID string, secret_key string, exp time.Duration) (string, error) {
+func MakeToken(userID string, secretKey string, exp time.Duration) (string, error) {
 	// создаём новый токен с алгоритмом подписи HS256 и утверждением - Claims
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims{
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -73,7 +73,7 @@ func MakeToken(userID string, secret_key string, exp time.Duration) (string, err
 	})
 
 	// создаём строку токена
-	tokenString, err := token.SignedString([]byte(secret_key))
+	tokenString, err := token.SignedString([]byte(secretKey))
 	if err != nil {
 		return "", err
 	}
@@ -81,7 +81,7 @@ func MakeToken(userID string, secret_key string, exp time.Duration) (string, err
 }
 
 // GetUserID возвращает идентификатор пользователя
-func GetUserID(token, secret_key string) (string, error) {
+func GetUserID(token, secretKey string) (string, error) {
 	// создаём экземпляр утверждения
 	claims := &claims{}
 	// парсим из строки токена tokenString в структуру
@@ -90,7 +90,7 @@ func GetUserID(token, secret_key string) (string, error) {
 			return nil, fmt.Errorf("unexpected signed method: %v", t.Header["alg"])
 		}
 
-		return []byte(secret_key), nil
+		return []byte(secretKey), nil
 	})
 
 	if err != nil {
