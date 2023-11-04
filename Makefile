@@ -12,7 +12,8 @@ gofmt:
 	gofmt -s -l . 	
 
 test:
-	go test -race ./...
+	gofmt -s -l . \
+	&& go test -race ./...
 
 vet:
 	go vet ./...
