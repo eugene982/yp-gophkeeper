@@ -1,3 +1,4 @@
+// Package ping ручка проверки соединения
 package ping
 
 import (
@@ -18,7 +19,6 @@ type Pinger interface {
 	Ping(context.Context) error
 }
 
-// Тип
 type PingerFunc func(context.Context) error
 
 func (f PingerFunc) Ping(ctx context.Context) error {

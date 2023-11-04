@@ -1,3 +1,4 @@
+// Package application реализация приложения
 package application
 
 import (

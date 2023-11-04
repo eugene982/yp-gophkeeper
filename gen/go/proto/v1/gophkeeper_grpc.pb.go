@@ -4,6 +4,7 @@
 // - protoc             v3.12.4
 // source: proto/v1/gophkeeper.proto
 
+// Package pb - сгенерированио 
 package pb
 
 import (

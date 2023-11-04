@@ -1,3 +1,4 @@
+// Package crypto описание работы шифрованием
 package crypto
 
 // Encryptor шифровальшик

@@ -1,3 +1,4 @@
+// Package handler хранит общие функции
 package handler
 
 import (

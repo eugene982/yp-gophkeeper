@@ -1,3 +1,4 @@
+// Package storage работа с хранилищем
 package storage
 
 import (

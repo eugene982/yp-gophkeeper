@@ -1,3 +1,4 @@
+// Package grpc реализация сервиса
 package grpc
 
 import (

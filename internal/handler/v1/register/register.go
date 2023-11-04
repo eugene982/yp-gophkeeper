@@ -1,3 +1,4 @@
+// Package register ручка регистрации пользователя
 package register
 
 import (
@@ -12,7 +13,7 @@ import (
 	"github.com/eugene982/yp-gophkeeper/internal/storage"
 )
 
-// Register интерфейс отвечающий за регистрацию пользователей
+// UserWriter интерфейс отвечающий за регистрацию пользователей
 type UserWriter interface {
 	WriteUser(context.Context, storage.UserData) error
 }

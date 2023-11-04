@@ -1,3 +1,4 @@
+// Package login ручка авторизации пользователя
 package login
 
 import (
@@ -29,7 +30,7 @@ type GRPCHandler func(context.Context, *pb.LoginRequest) (*pb.LoginResponse, err
 type HashCheckFunc func(string, string) bool
 type TokenGenFunc func(string) (string, error)
 
-// NewRPCLoginHandler
+// NewRPCLoginHandler - конструктор ручки логирования
 func NewRPCLoginHandler(r UserReader, checkFn HashCheckFunc, tokenFn TokenGenFunc) GRPCHandler {
 	return func(ctx context.Context, in *pb.LoginRequest) (*pb.LoginResponse, error) {
 

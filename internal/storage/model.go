@@ -2,8 +2,7 @@ package storage
 
 import "time"
 
-// ListData структура хранилища содержащая информацию о количестве
-// хранимой информации по пользователю
+// UserData структура пользователя
 type UserData struct {
 	UserID       string    `db:"user_id"`
 	PasswordHash string    `db:"passwd_hash"`

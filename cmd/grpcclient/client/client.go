@@ -1,3 +1,4 @@
+// Package client - grpc клиент
 package client
 
 import (

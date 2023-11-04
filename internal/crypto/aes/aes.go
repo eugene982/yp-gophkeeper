@@ -1,3 +1,4 @@
+// Package aes реализация шифрования на aes
 package aes
 
 import (

@@ -1,3 +1,4 @@
+// Package logger реализавция логгера на zap
 package logger
 
 import (
@@ -9,7 +10,7 @@ import (
 
 var zaplog *zap.Logger
 
-// Конструктор нового логгера
+// Initialize Конструктор нового логгера
 func Initialize(level string) error {
 	lvl, err := zap.ParseAtomicLevel(level)
 	if err != nil {
@@ -35,7 +36,7 @@ func Initialize(level string) error {
 	return nil
 }
 
-// Отладочные сообщения
+// Debug Отладочные сообщения
 func Debug(msg string, a ...any) {
 	if zaplog != nil {
 		zaplog.Sugar().Debugw(msg, a...)
@@ -44,7 +45,7 @@ func Debug(msg string, a ...any) {
 	}
 }
 
-// Информационные сообщения
+// Info Информационные сообщения
 func Info(msg string, a ...any) {
 	if zaplog != nil {
 		zaplog.Sugar().Infow(msg, a...)
@@ -53,7 +54,7 @@ func Info(msg string, a ...any) {
 	}
 }
 
-// Предупреждения
+// Warn Предупреждения
 func Warn(msg string, a ...any) {
 	if zaplog != nil {
 		zaplog.Sugar().Warnw(msg, a...)
@@ -62,7 +63,7 @@ func Warn(msg string, a ...any) {
 	}
 }
 
-// Ошибки
+// Error Ошибки
 func Error(err error, a ...any) {
 	if zaplog != nil {
 		zaplog.Sugar().Errorw(err.Error(), a...)

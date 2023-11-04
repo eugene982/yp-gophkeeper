@@ -1,3 +1,4 @@
+// Package command команды пользователя
 package command
 
 import (

@@ -1,4 +1,4 @@
-// Хранение в базе данных postres
+// Package postgres реализация хранилища на postres
 package postgres
 
 import (
@@ -323,7 +323,7 @@ func (p *PgxStore) BinaryUpdate(ctx context.Context, data storage.BinaryData) er
 	return nil
 }
 
-// BinaryUpdate запись фрагмента бинарника в хранилище бинарника
+// BinaryUpload запись фрагмента бинарника в хранилище бинарника
 func (p *PgxStore) BinaryUpload(ctx context.Context, data storage.BinaryChunk) error {
 	tx, err := p.db.BeginTxx(ctx, nil)
 	if err != nil {
@@ -344,7 +344,7 @@ func (p *PgxStore) BinaryUpload(ctx context.Context, data storage.BinaryChunk) e
 	return tx.Commit()
 }
 
-// BinaryUpdate обновление бинарника
+// BinaryDownload обновление бинарника
 func (p *PgxStore) BinaryDownload(ctx context.Context, data *storage.BinaryChunk) error {
 	tx, err := p.db.BeginTxx(ctx, nil)
 	if err != nil {

@@ -1,3 +1,4 @@
+// Package list ручка работы со списком
 package list
 
 import (
@@ -13,7 +14,7 @@ import (
 	"github.com/eugene982/yp-gophkeeper/internal/storage"
 )
 
-// List интерфейс возвращающий количество данных пользователя
+// ListReader интерфейс возвращающий количество данных пользователя
 type ListReader interface {
 	ReadList(context.Context, string) (storage.ListData, error)
 }

@@ -1,3 +1,4 @@
+// Package config конфигурация читаемая из флагов и переменных окружения
 package config
 
 import (

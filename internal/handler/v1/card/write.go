@@ -16,6 +16,7 @@ import (
 	crypt "github.com/eugene982/yp-gophkeeper/internal/crypto"
 )
 
+// CardWritter - интерфейс для записи карты
 type CardWritter interface {
 	CardWrite(ctx context.Context, data storage.CardData) error
 }
