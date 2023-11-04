@@ -29,7 +29,7 @@ func NewGRPCUploaderHandler(u BinaryUploader) GRPCUploadHandler {
 	return func(server pb.GophKeeper_BinaryUploadServer) error {
 		var (
 			chunk  storage.BinaryChunk
-			offset int
+			offset int64
 		)
 
 		var (
@@ -41,9 +41,9 @@ func NewGRPCUploaderHandler(u BinaryUploader) GRPCUploadHandler {
 			if err == nil {
 				chunk.BinID = stream.Id
 				chunk.Chunk = stream.Chunk
-				chunk.Offset = int64(offset)
-				offset += len(chunk.Chunk)
-				return u.BinaryUpload(server.Context(), chunk)
+				chunk.Offset = offset
+				offset += int64(len(chunk.Chunk))
+				err = u.BinaryUpload(server.Context(), chunk)
 			} else {
 				logger.Errorf("error upload binary: %w", err,
 					"id", stream)
