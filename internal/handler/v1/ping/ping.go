@@ -2,6 +2,7 @@ package ping
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -36,7 +37,7 @@ func NewPingHandler(pinger Pinger) http.Handler {
 		}
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("pong"))
+		fmt.Fprint(w, "pong")
 
 	}
 	return http.HandlerFunc(fn)

@@ -43,7 +43,7 @@ func NewGRPCUploaderHandler(u BinaryUploader) GRPCUploadHandler {
 				chunk.Chunk = stream.Chunk
 				chunk.Offset = int64(offset)
 				offset += len(chunk.Chunk)
-				u.BinaryUpload(server.Context(), chunk)
+				return u.BinaryUpload(server.Context(), chunk)
 			} else {
 				logger.Errorf("error upload binary: %w", err,
 					"id", stream)

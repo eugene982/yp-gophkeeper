@@ -5,12 +5,14 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
 
+	"github.com/eugene982/yp-gophkeeper/internal/logger"
 	"github.com/eugene982/yp-gophkeeper/internal/storage"
 )
 
@@ -262,7 +264,11 @@ func (p *PgxStore) BinaryDelete(ctx context.Context, userID, name string) (err e
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			logger.Error(fmt.Errorf("psql rollbacck error: %w", err))
+		}
+	}()
 
 	query := `SELECT lo_unlink(bin_id) 
 		FROM binaries WHERE user_id=$1 AND name=$2`
@@ -291,7 +297,11 @@ func (p *PgxStore) BinaryUpdate(ctx context.Context, data storage.BinaryData) er
 		if err != nil {
 			return err
 		}
-		defer tx.Rollback()
+		defer func() {
+			if err := tx.Rollback(); err != nil {
+				logger.Error(fmt.Errorf("psql rollbacck error: %w", err))
+			}
+		}()
 
 		_, err = tx.ExecContext(ctx, "SELECT lo_unlink($1)", data.BinID)
 		if err != nil {
@@ -319,7 +329,11 @@ func (p *PgxStore) BinaryUpload(ctx context.Context, data storage.BinaryChunk) e
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			logger.Error(fmt.Errorf("psql rollbacck error: %w", err))
+		}
+	}()
 
 	query := `SELECT lo_put(:bin_id, :offset, :chunk);`
 
@@ -336,7 +350,11 @@ func (p *PgxStore) BinaryDownload(ctx context.Context, data *storage.BinaryChunk
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			logger.Error(fmt.Errorf("psql rollbacck error: %w", err))
+		}
+	}()
 
 	query := `SELECT lo_get($1, $2, $3);`
 
@@ -354,7 +372,11 @@ func (p *PgxStore) Write(ctx context.Context, data any) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			logger.Error(fmt.Errorf("psql rollbacck error: %w", err))
+		}
+	}()
 
 	var query string
 	switch data.(type) {
@@ -385,7 +407,11 @@ func (p *PgxStore) Update(ctx context.Context, data any) error {
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			logger.Error(fmt.Errorf("psql rollbacck error: %w", err))
+		}
+	}()
 
 	var query string
 	switch data.(type) {
@@ -414,7 +440,11 @@ func (p *PgxStore) deleteByName(ctx context.Context, tabname, userID, name strin
 	if err != nil {
 		return err
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil {
+			logger.Error(fmt.Errorf("psql rollbacck error: %w", err))
+		}
+	}()
 
 	query := `DELETE FROM ` + tabname +
 		` WHERE user_id=$1 AND name=$2;`
