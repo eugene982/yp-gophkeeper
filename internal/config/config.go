@@ -10,9 +10,8 @@ import (
 // Config конфигурация получаемая из флагов и/или переменных окружения
 type Config struct {
 	ServerAddres string `env:"RUN_ADDRESS"`
-	LogLevel     string `env:"LOG_LEVEL"` // уровень логирования
-	//Timeout      time.Duration  // таймаут соединения
-	DatabaseDSN string `env:"DATABASE_DSN"` // адрес подключения к базе данных
+	LogLevel     string `env:"LOG_LEVEL"`    // уровень логирования
+	DSN          string `env:"DATABASE_DSN"` // адрес подключения к базе данных
 }
 
 // Parse заполнение структуры конфигурации
@@ -21,9 +20,8 @@ func Parse() (Config, error) {
 
 	// читаем флаги
 	flag.StringVar(&config.ServerAddres, "a", ":28000", "server address")
-	//flag.DurationVar(&config.Timeout, "t", 30, "timeout in seconds")
 	flag.StringVar(&config.LogLevel, "l", "info", "log level")
-	flag.StringVar(&config.DatabaseDSN, "d", "postgres://postgres:postgres@localhost/gophkeeper", "postgres connection string")
+	flag.StringVar(&config.DSN, "d", "postgres://postgres:postgres@localhost/gophkeeper", "postgres connection string")
 	flag.Parse()
 
 	err := env.Parse(&config)

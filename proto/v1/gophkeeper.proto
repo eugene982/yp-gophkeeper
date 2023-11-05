@@ -139,7 +139,7 @@ message PasswordListResponse {
 }
 
 message PasswordReadRequest {
-    string name = 1[(buf.validate.field).string.min_len = 1];
+    string name = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
 }
 
 message PasswordReadResponse {
@@ -162,7 +162,7 @@ message BinaryWriteResponse {
 }
 
 message PasswordDelRequest {
-    string name = 1[(buf.validate.field).string.min_len = 1];
+    string name = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
 }
 
 message PasswordUpdateRequest {
@@ -177,7 +177,7 @@ message CardListResponse {
 }
 
 message CardReadRequest {
-    string name = 1[(buf.validate.field).string.min_len = 1];
+    string name = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
 }
 
 message CardReadResponse {
@@ -196,7 +196,7 @@ message CardWriteRequest {
 }
 
 message CardDelRequest {
-    string name = 1[(buf.validate.field).string.min_len = 1];
+    string name = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
 }
 
 message CardUpdateRequest {
@@ -211,7 +211,7 @@ message NoteListResponse {
 }
 
 message NoteReadRequest {
-    string name = 1[(buf.validate.field).string.min_len = 1];
+    string name = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
 }
 
 message NoteReadResponse {
@@ -226,7 +226,7 @@ message NoteWriteRequest {
 }
 
 message NoteDelRequest {
-    string name = 1[(buf.validate.field).string.min_len = 1];
+    string name = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
 }
 
 message NoteUpdateRequest {
@@ -241,7 +241,7 @@ message BinaryListResponse {
 }
 
 message BinaryReadRequest {
-    string name = 1[(buf.validate.field).string.min_len = 1];
+    string name = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
 }
 
 message BinaryReadResponse {
@@ -259,7 +259,7 @@ message BinaryWriteRequest {
 }
 
 message BinaryDelRequest {
-    string name = 1[(buf.validate.field).string.min_len = 1];
+    string name = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
 }
 
 message BinaryUpdateRequest {

@@ -5,14 +5,15 @@ import (
 	"errors"
 	"testing"
 
-	pb "github.com/eugene982/yp-gophkeeper/gen/go/proto/v1"
-	crypt "github.com/eugene982/yp-gophkeeper/internal/crypto"
-	"github.com/eugene982/yp-gophkeeper/internal/handler"
-	"github.com/eugene982/yp-gophkeeper/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	pb "github.com/eugene982/yp-gophkeeper/gen/go/proto/v1"
+	crypt "github.com/eugene982/yp-gophkeeper/internal/crypto"
+	"github.com/eugene982/yp-gophkeeper/internal/handler"
+	"github.com/eugene982/yp-gophkeeper/internal/storage"
 )
 
 func TestGRPCUpdateHandler(t *testing.T) {

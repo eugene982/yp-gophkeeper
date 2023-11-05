@@ -5,13 +5,14 @@ import (
 	"errors"
 	"testing"
 
-	pb "github.com/eugene982/yp-gophkeeper/gen/go/proto/v1"
-	"github.com/eugene982/yp-gophkeeper/internal/handler"
-	"github.com/eugene982/yp-gophkeeper/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	pb "github.com/eugene982/yp-gophkeeper/gen/go/proto/v1"
+	"github.com/eugene982/yp-gophkeeper/internal/handler"
+	"github.com/eugene982/yp-gophkeeper/internal/storage"
 )
 
 func TestGRPCDeleteHandler(t *testing.T) {

@@ -162,7 +162,7 @@ func NewServer(store storage.Storage, crypt crypt.EncryptDecryptor, addr string)
 	srv.binaryDownloadHandler = binary.NewGRPCDownloadHandler(store)
 
 	// регистрируем сервис
-	pb.RegisterGophKeeperServer(srv.server, srv)
+	pb.RegisterGophKeeperServer(srv.server, &srv)
 
 	return &srv, nil
 }
@@ -177,7 +177,7 @@ func (s *GRPCServer) Stop() {
 	s.server.Stop()
 }
 
-func (s GRPCServer) Ping(ctx context.Context, in *empty.Empty) (*pb.PingResponse, error) {
+func (s *GRPCServer) Ping(ctx context.Context, in *empty.Empty) (*pb.PingResponse, error) {
 	if s.pingHandler != nil {
 		return s.pingHandler(ctx, in)
 	}
@@ -186,21 +186,21 @@ func (s GRPCServer) Ping(ctx context.Context, in *empty.Empty) (*pb.PingResponse
 
 // User
 
-func (s GRPCServer) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.RegisterResponse, error) {
+func (s *GRPCServer) Register(ctx context.Context, in *pb.RegisterRequest) (*pb.RegisterResponse, error) {
 	if s.regHandler != nil {
 		return s.regHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.Register(ctx, in)
 }
 
-func (s GRPCServer) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginResponse, error) {
+func (s *GRPCServer) Login(ctx context.Context, in *pb.LoginRequest) (*pb.LoginResponse, error) {
 	if s.loginHandler != nil {
 		return s.loginHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.Login(ctx, in)
 }
 
-func (s GRPCServer) List(ctx context.Context, in *empty.Empty) (*pb.ListResponse, error) {
+func (s *GRPCServer) List(ctx context.Context, in *empty.Empty) (*pb.ListResponse, error) {
 	if s.listHandler != nil {
 		return s.listHandler(ctx, in)
 	}
@@ -209,35 +209,35 @@ func (s GRPCServer) List(ctx context.Context, in *empty.Empty) (*pb.ListResponse
 
 // Password
 
-func (s GRPCServer) PasswordList(ctx context.Context, in *empty.Empty) (*pb.PasswordListResponse, error) {
+func (s *GRPCServer) PasswordList(ctx context.Context, in *empty.Empty) (*pb.PasswordListResponse, error) {
 	if s.passwdListHandler != nil {
 		return s.passwdListHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.PasswordList(ctx, in)
 }
 
-func (s GRPCServer) PasswordWrite(ctx context.Context, in *pb.PasswordWriteRequest) (*empty.Empty, error) {
+func (s *GRPCServer) PasswordWrite(ctx context.Context, in *pb.PasswordWriteRequest) (*empty.Empty, error) {
 	if s.passwdWriteHandler != nil {
 		return s.passwdWriteHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.PasswordWrite(ctx, in)
 }
 
-func (s GRPCServer) PasswordRead(ctx context.Context, in *pb.PasswordReadRequest) (*pb.PasswordReadResponse, error) {
+func (s *GRPCServer) PasswordRead(ctx context.Context, in *pb.PasswordReadRequest) (*pb.PasswordReadResponse, error) {
 	if s.passwdReadHandler != nil {
 		return s.passwdReadHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.PasswordRead(ctx, in)
 }
 
-func (s GRPCServer) PasswordUpdate(ctx context.Context, in *pb.PasswordUpdateRequest) (*empty.Empty, error) {
+func (s *GRPCServer) PasswordUpdate(ctx context.Context, in *pb.PasswordUpdateRequest) (*empty.Empty, error) {
 	if s.passwdUpdateHandler != nil {
 		return s.passwdUpdateHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.PasswordUpdate(ctx, in)
 }
 
-func (s GRPCServer) PasswordDelete(ctx context.Context, in *pb.PasswordDelRequest) (*empty.Empty, error) {
+func (s *GRPCServer) PasswordDelete(ctx context.Context, in *pb.PasswordDelRequest) (*empty.Empty, error) {
 	if s.passwdDeleteHandler != nil {
 		return s.passwdDeleteHandler(ctx, in)
 	}
@@ -246,35 +246,35 @@ func (s GRPCServer) PasswordDelete(ctx context.Context, in *pb.PasswordDelReques
 
 // Cards
 
-func (s GRPCServer) CardList(ctx context.Context, in *empty.Empty) (*pb.CardListResponse, error) {
+func (s *GRPCServer) CardList(ctx context.Context, in *empty.Empty) (*pb.CardListResponse, error) {
 	if s.cardListHandler != nil {
 		return s.cardListHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.CardList(ctx, in)
 }
 
-func (s GRPCServer) CardWrite(ctx context.Context, in *pb.CardWriteRequest) (*empty.Empty, error) {
+func (s *GRPCServer) CardWrite(ctx context.Context, in *pb.CardWriteRequest) (*empty.Empty, error) {
 	if s.cardWriteHandler != nil {
 		return s.cardWriteHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.CardWrite(ctx, in)
 }
 
-func (s GRPCServer) CardRead(ctx context.Context, in *pb.CardReadRequest) (*pb.CardReadResponse, error) {
+func (s *GRPCServer) CardRead(ctx context.Context, in *pb.CardReadRequest) (*pb.CardReadResponse, error) {
 	if s.cardReadHandler != nil {
 		return s.cardReadHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.CardRead(ctx, in)
 }
 
-func (s GRPCServer) CardUpdate(ctx context.Context, in *pb.CardUpdateRequest) (*empty.Empty, error) {
+func (s *GRPCServer) CardUpdate(ctx context.Context, in *pb.CardUpdateRequest) (*empty.Empty, error) {
 	if s.cardUpdateHandler != nil {
 		return s.cardUpdateHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.CardUpdate(ctx, in)
 }
 
-func (s GRPCServer) CardDelete(ctx context.Context, in *pb.CardDelRequest) (*empty.Empty, error) {
+func (s *GRPCServer) CardDelete(ctx context.Context, in *pb.CardDelRequest) (*empty.Empty, error) {
 	if s.cardDeleteHandler != nil {
 		return s.cardDeleteHandler(ctx, in)
 	}
@@ -283,35 +283,35 @@ func (s GRPCServer) CardDelete(ctx context.Context, in *pb.CardDelRequest) (*emp
 
 // Notes
 
-func (s GRPCServer) NoteList(ctx context.Context, in *empty.Empty) (*pb.NoteListResponse, error) {
+func (s *GRPCServer) NoteList(ctx context.Context, in *empty.Empty) (*pb.NoteListResponse, error) {
 	if s.noteListHandler != nil {
 		return s.noteListHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.NoteList(ctx, in)
 }
 
-func (s GRPCServer) NoteWrite(ctx context.Context, in *pb.NoteWriteRequest) (*empty.Empty, error) {
+func (s *GRPCServer) NoteWrite(ctx context.Context, in *pb.NoteWriteRequest) (*empty.Empty, error) {
 	if s.noteWriteHandler != nil {
 		return s.noteWriteHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.NoteWrite(ctx, in)
 }
 
-func (s GRPCServer) NoteRead(ctx context.Context, in *pb.NoteReadRequest) (*pb.NoteReadResponse, error) {
+func (s *GRPCServer) NoteRead(ctx context.Context, in *pb.NoteReadRequest) (*pb.NoteReadResponse, error) {
 	if s.noteReadHandler != nil {
 		return s.noteReadHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.NoteRead(ctx, in)
 }
 
-func (s GRPCServer) NoteUpdate(ctx context.Context, in *pb.NoteUpdateRequest) (*empty.Empty, error) {
+func (s *GRPCServer) NoteUpdate(ctx context.Context, in *pb.NoteUpdateRequest) (*empty.Empty, error) {
 	if s.noteUpdateHandler != nil {
 		return s.noteUpdateHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.NoteUpdate(ctx, in)
 }
 
-func (s GRPCServer) NoteDelete(ctx context.Context, in *pb.NoteDelRequest) (*empty.Empty, error) {
+func (s *GRPCServer) NoteDelete(ctx context.Context, in *pb.NoteDelRequest) (*empty.Empty, error) {
 	if s.noteDeleteHandler != nil {
 		return s.noteDeleteHandler(ctx, in)
 	}
@@ -320,49 +320,49 @@ func (s GRPCServer) NoteDelete(ctx context.Context, in *pb.NoteDelRequest) (*emp
 
 // Binaries
 
-func (s GRPCServer) BinaryList(ctx context.Context, in *empty.Empty) (*pb.BinaryListResponse, error) {
+func (s *GRPCServer) BinaryList(ctx context.Context, in *empty.Empty) (*pb.BinaryListResponse, error) {
 	if s.binaryListHandler != nil {
 		return s.binaryListHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.BinaryList(ctx, in)
 }
 
-func (s GRPCServer) BinaryWrite(ctx context.Context, in *pb.BinaryWriteRequest) (*pb.BinaryWriteResponse, error) {
+func (s *GRPCServer) BinaryWrite(ctx context.Context, in *pb.BinaryWriteRequest) (*pb.BinaryWriteResponse, error) {
 	if s.binaryWriteHandler != nil {
 		return s.binaryWriteHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.BinaryWrite(ctx, in)
 }
 
-func (s GRPCServer) BinaryRead(ctx context.Context, in *pb.BinaryReadRequest) (*pb.BinaryReadResponse, error) {
+func (s *GRPCServer) BinaryRead(ctx context.Context, in *pb.BinaryReadRequest) (*pb.BinaryReadResponse, error) {
 	if s.binaryReadHandler != nil {
 		return s.binaryReadHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.BinaryRead(ctx, in)
 }
 
-func (s GRPCServer) BinaryUpdate(ctx context.Context, in *pb.BinaryUpdateRequest) (*empty.Empty, error) {
+func (s *GRPCServer) BinaryUpdate(ctx context.Context, in *pb.BinaryUpdateRequest) (*empty.Empty, error) {
 	if s.binaryUpdateHandler != nil {
 		return s.binaryUpdateHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.BinaryUpdate(ctx, in)
 }
 
-func (s GRPCServer) BinaryDelete(ctx context.Context, in *pb.BinaryDelRequest) (*empty.Empty, error) {
+func (s *GRPCServer) BinaryDelete(ctx context.Context, in *pb.BinaryDelRequest) (*empty.Empty, error) {
 	if s.binaryDeleteHandler != nil {
 		return s.binaryDeleteHandler(ctx, in)
 	}
 	return s.UnimplementedGophKeeperServer.BinaryDelete(ctx, in)
 }
 
-func (s GRPCServer) BinaryUpload(us pb.GophKeeper_BinaryUploadServer) error {
+func (s *GRPCServer) BinaryUpload(us pb.GophKeeper_BinaryUploadServer) error {
 	if s.binaryUploadHandler != nil {
 		return s.binaryUploadHandler(us)
 	}
 	return s.UnimplementedGophKeeperServer.BinaryUpload(us)
 }
 
-func (s GRPCServer) BinaryDownload(req *pb.BidaryDownloadRequest, ds pb.GophKeeper_BinaryDownloadServer) error {
+func (s *GRPCServer) BinaryDownload(req *pb.BidaryDownloadRequest, ds pb.GophKeeper_BinaryDownloadServer) error {
 	if s.binaryDownloadHandler != nil {
 		return s.binaryDownloadHandler(req, ds)
 	}

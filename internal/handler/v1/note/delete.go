@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 
+	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	pb "github.com/eugene982/yp-gophkeeper/gen/go/proto/v1"
 	"github.com/eugene982/yp-gophkeeper/internal/handler"
 	"github.com/eugene982/yp-gophkeeper/internal/logger"
 	"github.com/eugene982/yp-gophkeeper/internal/storage"
-	"github.com/golang/protobuf/ptypes/empty"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type NoteDeleter interface {
