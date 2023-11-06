@@ -23,3 +23,6 @@ vendor/
 
 # Backup
 backup/
+
+# database
+database/

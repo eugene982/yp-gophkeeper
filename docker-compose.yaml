@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # postgres  
+  db:
+    restart: always
+    image: postgres:alpine
+    
+    volumes:
+       - ./database/postgres/pgdata
+    
+    environment:
+      - POSTGRES_USER=docker
+      - POSTGRES_PASSWORD=docker
+      - POSTGRES_DB=gophkeeper
+      - PGDATA=/pgdata
+    
+    ports: 
+      - 54320:5432
+    
+    healthcheck:
+       test: ["CMD-SHELL", "pg_isready -U docker -d gophkeeper"]
+       interval: 5s
+       timeout: 5s
+       retries: 5
+
+  #########################################
+  # migrate
+  migration:
+    image: migrate/migrate
+    
+    volumes:
+      - ./db/migrations:/migrations
+    
+    depends_on:
+      db:
+        condition: service_healthy #service_started, service_healthy, service_completed_successfully
+    command: ["-path", "/migrations", "-database",  "postgresql://docker:docker@db:5432/gophkeeper?sslmode=disable", "up"]
+  
+  ############################################
+  # service
+  yp-gophkeeper:
+   
+    build: ./
+      
+    command: bin/gophkeeper
+
+    ports:
+      - 28000:28000
+
+    depends_on:
+      db:
+        condition: service_healthy 
+      migration:
+        condition: service_completed_successfully
+
+    environment:
+      - RUN_ADDRESS=:28000
+      - LOG_LEVEL=debug
+      - DATABASE_DSN=postgresql://docker:docker@db:5432/gophkeeper
+

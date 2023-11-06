@@ -53,7 +53,7 @@ protoc:
 	--go-grpc_out=gen/go --go-grpc_opt=paths=source_relative \
 	proto/v1/gophkeeper.proto
 
-# migrationc
+# migration
 migrate-create:
 	migrate create -ext sql -dir db/migrations -seq init schema
 
@@ -62,3 +62,13 @@ migrate-up:
 
 migrate-down:
 	migrate -database $(DATABASE_DSN) -path db/migrations down
+
+# Docker
+docker-build:
+	docker-compose up --build yp-gophkeeper
+
+docker-run: docker-build
+	docker-compose run --name yp-gophkeeper
+
+
+
