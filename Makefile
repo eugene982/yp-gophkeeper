@@ -1,10 +1,9 @@
-BUILD_VERSION="v0.0.2"
+BUILD_VERSION="v0.9.0"
 BUILD_DATE=$(shell date +"%Y/%m/%d %H:%M")
 BUILD_COMMIT=$(shell git rev-parse HEAD)
 
 export PATH := $(PATH):$(shell go env GOPATH)/bin
 
-BIN_PATH=./bin/gophkeeper
 DATABASE_DSN="postgres://test:test@localhost/gophkeeper_test"
 VET_TOOL=./bin/statictest
 
@@ -36,14 +35,19 @@ runsvr:
 		"-X main.buildVersion=$(BUILD_VERSION) -X 'main.buildDate=$(BUILD_DATE)' -X 'main.buildCommit=$(BUILD_COMMIT)' "\
 		cmd/gophkeeper/*.go -d $(DATABASE_DSN) 
 
-buildsrv: staticcheck vet
-	go build -o $(BIN_PATH) \
+buildsrv:
+	go build -o ./bin/gophkeeper \
 		-ldflags \
 		"-X main.buildVersion=$(BUILD_VERSION) -X 'main.buildDate=$(BUILD_DATE)' -X 'main.buildCommit="$(BUILD_COMMIT)"' "\
 		cmd/gophkeeper/*.go
 
-
 # client
+buildcli:
+	go build -o ./bin/gk-client \
+		-ldflags \
+		"-X main.buildVersion=$(BUILD_VERSION) -X 'main.buildDate=$(BUILD_DATE)' -X 'main.buildCommit="$(BUILD_COMMIT)"' "\
+		cmd/grpcclient/*.go
+
 runcli:
 	go run cmd/grpcclient/*.go -l=debug
 
