@@ -21,13 +21,17 @@ var (
 )
 
 var (
-	logLevel      string
-	serverAddress string
+	logLevel                             string
+	serverAddress                        string
+	buildVersion, buildDate, buildCommit string
 )
 
 func main() {
 
 	fmt.Println("gophkeeper CLI")
+	if buildVersion != "" {
+		fmt.Println("version:", buildVersion, buildDate, buildCommit)
+	}
 	fmt.Println(`"exit" или "Ctrl-D" чтобы выйти из программы`)
 
 	flag.StringVar(&logLevel, "l", "error", "log level")

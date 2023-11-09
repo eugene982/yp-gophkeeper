@@ -1,4 +1,4 @@
-BUILD_VERSION="v0.9.0"
+BUILD_VERSION="v0.9.1"
 BUILD_DATE=$(shell date +"%Y/%m/%d %H:%M")
 BUILD_COMMIT=$(shell git rev-parse HEAD)
 
@@ -42,11 +42,25 @@ buildsrv:
 		cmd/gophkeeper/*.go
 
 # client
-buildcli:
-	go build -o ./bin/gk-client \
+buildcli-lin:
+		go build -o ./build/gk-client-linux \
 		-ldflags \
 		"-X main.buildVersion=$(BUILD_VERSION) -X 'main.buildDate=$(BUILD_DATE)' -X 'main.buildCommit="$(BUILD_COMMIT)"' "\
 		cmd/grpcclient/*.go
+
+buildcli-win:
+	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 \
+	go build -o ./build/gk-client-windows.exe \
+		-ldflags \
+		"-X main.buildVersion=$(BUILD_VERSION) -X 'main.buildDate=$(BUILD_DATE)' -X 'main.buildCommit="$(BUILD_COMMIT)"' "\
+		cmd/grpcclient/main.go
+
+buildcli-mac:
+	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 \
+	go build -o ./build/gk-client-windows \
+		-ldflags \
+		"-X main.buildVersion=$(BUILD_VERSION) -X 'main.buildDate=$(BUILD_DATE)' -X 'main.buildCommit="$(BUILD_COMMIT)"' "\
+		cmd/grpcclient/main.go
 
 runcli:
 	go run cmd/grpcclient/*.go -l=debug
