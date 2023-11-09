@@ -1,4 +1,4 @@
-FROM golang:1.20-alpine
+FROM golang:1.20-alpine AS builder
 
 WORKDIR /usr/local/src
 
@@ -16,9 +16,15 @@ COPY internal ./internal
 RUN mkdir ./bin
 RUN go build -o ./bin/gophkeeper cmd/gophkeeper/main.go
 
-#copy migrations
-COPY db/migrations ./migrations
+###############################
+FROM alpine
 
-# start
-RUN chmod +x ./bin/gophkeeper
+WORKDIR /artifacts
+
+# copy
+COPY db/migrations ./migrations
+COPY --from=builder /usr/local/src/bin/ ./bin
+
+VOLUME /artifacts
+
 CMD ["./bin/gophkeeper"]

@@ -7,7 +7,7 @@ services:
     image: postgres:alpine
     
     volumes:
-       - ./database/postgres/pgdata
+       - pg-data:/pgdata
     
     environment:
       - POSTGRES_USER=docker
@@ -42,8 +42,9 @@ services:
   yp-gophkeeper:
    
     build: ./
-      
     command: bin/gophkeeper
+    volumes:
+      - artifacts:/artifacts
 
     ports:
       - 28000:28000
@@ -60,3 +61,7 @@ services:
       - LOG_LEVEL=debug
       - DATABASE_DSN=postgresql://docker:docker@db:5432/gophkeeper
 
+# подключаемые тома 
+volumes:
+  pg-data:
+  artifacts:
