@@ -23,7 +23,7 @@ func Parse() (Config, error) {
 	flag.StringVar(&config.ServerAddres, "a", ":28000", "server address")
 	flag.StringVar(&config.LogLevel, "l", "info", "log level")
 	flag.StringVar(&config.DSN, "d", "postgres://postgres:postgres@localhost/gophkeeper", "postgres connection string")
-	flag.StringVar(&config.MigratePath, "m", "", "path to migrations file")
+	flag.StringVar(&config.MigratePath, "m", "", "path to migrations files")
 	flag.Parse()
 
 	err := env.Parse(&config)
