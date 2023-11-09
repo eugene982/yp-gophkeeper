@@ -18,7 +18,7 @@ var (
 var database Storage
 
 // Open подключаемся к указанной базе
-func Open(dns string) (Storage, error) {
+func Open(dns, migratePath string) (Storage, error) {
 
 	if dns == "" {
 		return nil, errors.New("database dsn is empty")
@@ -42,7 +42,7 @@ func Open(dns string) (Storage, error) {
 		return nil, errors.New("database not initialize")
 	}
 
-	err = database.Open(db)
+	err = database.Open(db, migratePath)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func RegDriver(db Storage) {
 
 // Storage Интерфейс для хранилища данных
 type Storage interface {
-	Open(*sqlx.DB) error
+	Open(*sqlx.DB, string) error
 	Close() error
 	Ping(context.Context) error
 	WriteUser(context.Context, UserData) error

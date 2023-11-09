@@ -26,16 +26,16 @@ services:
 
   #########################################
   # migrate
-  migration:
-    image: migrate/migrate
+  # migration:
+  #   image: migrate/migrate
     
-    volumes:
-      - ./db/migrations:/migrations
+  #   volumes:
+  #     - ./db/migrations:/migrations
     
-    depends_on:
-      db:
-        condition: service_healthy #service_started, service_healthy, service_completed_successfully
-    command: ["-path", "/migrations", "-database",  "postgresql://docker:docker@db:5432/gophkeeper?sslmode=disable", "up"]
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy #service_started, service_healthy, service_completed_successfully
+  #   command: ["-path", "/migrations", "-database",  "postgresql://docker:docker@db:5432/gophkeeper?sslmode=disable", "up"]
   
   ############################################
   # service
@@ -51,10 +51,11 @@ services:
     depends_on:
       db:
         condition: service_healthy 
-      migration:
-        condition: service_completed_successfully
+      # migration:
+      #   condition: service_completed_successfully
 
     environment:
+      - MIGRATE_PATH=./migrations
       - RUN_ADDRESS=:28000
       - LOG_LEVEL=debug
       - DATABASE_DSN=postgresql://docker:docker@db:5432/gophkeeper

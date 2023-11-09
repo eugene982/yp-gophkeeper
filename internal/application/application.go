@@ -25,7 +25,7 @@ func New(conf config.Config) (*Application, error) {
 		err error
 	)
 
-	app.storage, err = storage.Open(conf.DSN)
+	app.storage, err = storage.Open(conf.DSN, conf.MigratePath)
 	if err != nil {
 		return nil, err
 	}

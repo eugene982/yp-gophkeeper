@@ -6,11 +6,16 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"path/filepath"
 
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5/pgconn"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/jmoiron/sqlx"
+
+	"github.com/golang-migrate/migrate/v4"
+	migrate_postgres "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 
 	"github.com/eugene982/yp-gophkeeper/internal/logger"
 	"github.com/eugene982/yp-gophkeeper/internal/storage"
@@ -81,7 +86,28 @@ func init() {
 var _ storage.Storage = (*PgxStore)(nil)
 
 // Open - Функция открытия БД
-func (p *PgxStore) Open(db *sqlx.DB) error {
+func (p *PgxStore) Open(db *sqlx.DB, migratePath string) error {
+	if migratePath != "" {
+		driver, err := migrate_postgres.WithInstance(db.DB, &migrate_postgres.Config{})
+		if err != nil {
+			return err
+		}
+
+		absParh, err := filepath.Abs(migratePath)
+		if err != nil {
+			return err
+		}
+
+		m, err := migrate.NewWithDatabaseInstance("file://"+absParh,
+			"posrgres", driver)
+		if err != nil {
+			return err
+		}
+		if err = m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+			return err
+		}
+	}
+
 	p.db = db
 	return nil
 }

@@ -16,6 +16,9 @@ COPY internal ./internal
 RUN mkdir ./bin
 RUN go build -o ./bin/gophkeeper cmd/gophkeeper/main.go
 
+#copy migrations
+COPY db/migrations ./migrations
+
 # start
 RUN chmod +x ./bin/gophkeeper
 CMD ["./bin/gophkeeper"]
