@@ -31,7 +31,8 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           make buildcli-lin
-          mv build/gk-client-linux build/gk-client-${{ matrix.os }}-amd64 
+          mv build/gk-client-lin build/gk-client-${{ matrix.os }}-amd64
+
       - name: Build darwin
         if: matrix.os == 'macos-latest'
         run: |
@@ -42,7 +43,7 @@ jobs:
         if: matrix.os == 'windows-latest'
         run: |
           make buildcli-win
-          mv build/gk-client-win build/gk-client-${{ matrix.os }}-amd64 
+          move build/gk-client-win.exe build/gk-client-${{ matrix.os }}-amd64.exe 
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3

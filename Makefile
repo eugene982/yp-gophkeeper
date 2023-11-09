@@ -43,21 +43,21 @@ buildsrv:
 
 # client
 buildcli-lin:
-		go build -o ./build/gk-client-linux \
+		go build -o ./build/gk-client-lin \
 		-ldflags \
 		"-X main.buildVersion=$(BUILD_VERSION) -X 'main.buildDate=$(BUILD_DATE)' -X 'main.buildCommit="$(BUILD_COMMIT)"' "\
 		cmd/grpcclient/*.go
 
 buildcli-win:
 	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 \
-	go build -o ./build/gk-client-windows \
+	go build -o ./build/gk-client-win.exe \
 		-ldflags \
 		"-X main.buildVersion=$(BUILD_VERSION) -X 'main.buildDate=$(BUILD_DATE)' -X 'main.buildCommit="$(BUILD_COMMIT)"' "\
 		cmd/grpcclient/main.go
 
 buildcli-mac:
 	GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 \
-	go build -o ./build/gk-client-windows \
+	go build -o ./build/gk-client-mac \
 		-ldflags \
 		"-X main.buildVersion=$(BUILD_VERSION) -X 'main.buildDate=$(BUILD_DATE)' -X 'main.buildCommit="$(BUILD_COMMIT)"' "\
 		cmd/grpcclient/main.go
