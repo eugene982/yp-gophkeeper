@@ -50,7 +50,7 @@ buildcli-lin:
 
 buildcli-win:
 	GOOS=windows GOARCH=amd64 CGO_ENABLED=0 \
-	go build -o ./build/gk-client-windows.exe \
+	go build -o ./build/gk-client-windows \
 		-ldflags \
 		"-X main.buildVersion=$(BUILD_VERSION) -X 'main.buildDate=$(BUILD_DATE)' -X 'main.buildCommit="$(BUILD_COMMIT)"' "\
 		cmd/grpcclient/main.go

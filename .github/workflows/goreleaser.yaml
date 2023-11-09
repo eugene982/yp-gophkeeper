@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,18 +27,25 @@ jobs:
             go get github.com/c-bata/go-prompt
             go get google.golang.org/grpc
 
+      - name: Build linux
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          make buildcli-lin
+          mv build/gk-client-linux build/gk-client-${{ matrix.os }}-amd64 
       - name: Build darwin
         if: matrix.os == 'macos-latest'
         run: |
           make buildcli-mac
-           
-      - name: Build linux
-        if: matrix.os == 'ubuntu-latest'
+          mv build/gk-client-mac build/gk-client-${{ matrix.os }}-amd64
+
+      - name: Build windows
+        if: matrix.os == 'windows-latest'
         run: |
-          make buildcli-lin 
-      
+          make buildcli-win
+          mv build/gk-client-win build/gk-client-${{ matrix.os }}-amd64 
+
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: gk-client-${{ matrix.os }}-amd64
           path: build/gk-client-${{ matrix.os }}-amd64
