@@ -77,6 +77,8 @@ func executor(line string) {
 	switch commands[0] {
 	case "exit", "quit":
 		cmd = newExitCmd(args)
+	case "info":
+		cmd = newInfoCmd(args)
 	case "ping":
 		cmd = newPingCmd(args)
 	case "login":
@@ -113,6 +115,7 @@ func completer(d prompt.Document) []prompt.Suggest {
 	case 0, 1:
 		s = []prompt.Suggest{
 			{Text: "exit", Description: "выход из клиента"},
+			{Text: "info", Description: "вывод информации о сборке"},
 			{Text: "ping", Description: "проверка соединения"},
 			{Text: "login", Description: "[user password] авторизация пользователя"},
 			{Text: "reg", Description: "[user password] регистрация нового пользователя"},
@@ -175,6 +178,16 @@ func newExitCmd(args []string) *command.Command {
 		}
 		fmt.Println("Bye!")
 		os.Exit(0)
+		return nil
+	},
+		args)
+}
+
+func newInfoCmd(args []string) *command.Command {
+	return command.New(func(m map[string]string) error {
+		fmt.Println("version:", buildVersion)
+		fmt.Println("date:   ", buildDate)
+		fmt.Println("commit: ", buildCommit)
 		return nil
 	},
 		args)

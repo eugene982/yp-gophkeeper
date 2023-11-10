@@ -291,7 +291,7 @@ func (p *PgxStore) BinaryDelete(ctx context.Context, userID, name string) (err e
 		return err
 	}
 	defer func() {
-		if err := tx.Rollback(); err != nil {
+		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
 			logger.Error(fmt.Errorf("psql rollbacck error: %w", err))
 		}
 	}()
@@ -324,7 +324,7 @@ func (p *PgxStore) BinaryUpdate(ctx context.Context, data storage.BinaryData) er
 			return err
 		}
 		defer func() {
-			if err := tx.Rollback(); err != nil {
+			if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
 				logger.Error(fmt.Errorf("psql rollbacck error: %w", err))
 			}
 		}()
@@ -356,7 +356,7 @@ func (p *PgxStore) BinaryUpload(ctx context.Context, data storage.BinaryChunk) e
 		return err
 	}
 	defer func() {
-		if err := tx.Rollback(); err != nil {
+		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
 			logger.Error(fmt.Errorf("psql rollbacck error: %w", err))
 		}
 	}()
@@ -377,7 +377,7 @@ func (p *PgxStore) BinaryDownload(ctx context.Context, data *storage.BinaryChunk
 		return err
 	}
 	defer func() {
-		if err := tx.Rollback(); err != nil {
+		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
 			logger.Error(fmt.Errorf("psql rollbacck error: %w", err))
 		}
 	}()
@@ -399,7 +399,7 @@ func (p *PgxStore) Write(ctx context.Context, data any) error {
 		return err
 	}
 	defer func() {
-		if err := tx.Rollback(); err != nil {
+		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
 			logger.Error(fmt.Errorf("psql rollbacck error: %w", err))
 		}
 	}()
@@ -434,7 +434,7 @@ func (p *PgxStore) Update(ctx context.Context, data any) error {
 		return err
 	}
 	defer func() {
-		if err := tx.Rollback(); err != nil {
+		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
 			logger.Error(fmt.Errorf("psql rollbacck error: %w", err))
 		}
 	}()
@@ -467,7 +467,7 @@ func (p *PgxStore) deleteByName(ctx context.Context, tabname, userID, name strin
 		return err
 	}
 	defer func() {
-		if err := tx.Rollback(); err != nil {
+		if err := tx.Rollback(); err != nil && !errors.Is(err, sql.ErrTxDone) {
 			logger.Error(fmt.Errorf("psql rollbacck error: %w", err))
 		}
 	}()

@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS binaries (
     id        SERIAL       PRIMARY KEY,
     user_id   VARCHAR(64)  NOT NULL,
     name      VARCHAR(128) NOT NULL,
-    size      INT		   NOT NULL,
+    size      BIGINT	   NOT NULL,
     notes     BYTEA        NOT NULL,
     bin_id    OID		   NOT NULL,
     create_at TIMESTAMP    NOT NULL DEFAULT(now()),
