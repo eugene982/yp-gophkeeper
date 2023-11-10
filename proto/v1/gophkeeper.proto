@@ -1,0 +1,284 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "buf/validate/validate.proto";
+
+package gophermart.v1;
+
+option go_package = "github.com/eugene982/yp-gophermart/gen/go/proto/v1;pb_v1";
+
+service GophKeeper {
+    // Ping проверка соединения
+    rpc Ping(google.protobuf.Empty) returns (PingResponse);
+
+    // Register регистрация нового пользователя
+    rpc Register(RegisterRequest) returns (RegisterResponse);
+
+    // Login регистрация нового пользователя
+    rpc Login(LoginRequest) returns (LoginResponse);
+
+    // List возвращает количество хранимых данных пользователя (защищённый)
+    rpc List(google.protobuf.Empty) returns (ListResponse); 
+
+    // Passwords //
+
+    // PasswordList - возвращает список паролей пользователя
+    rpc PasswordList(google.protobuf.Empty) returns (PasswordListResponse);
+
+    // PasswordWrite запись нового пароля
+    rpc PasswordWrite(PasswordWriteRequest) returns (google.protobuf.Empty);
+
+    // PasswordUpdate обновление имеющегочя пароля
+    rpc PasswordUpdate(PasswordUpdateRequest) returns (google.protobuf.Empty);
+
+    // PasswordRead удаление пароля
+    rpc PasswordRead(PasswordReadRequest) returns (PasswordReadResponse);
+    
+    // PasswordDelete удаление пароля
+    rpc PasswordDelete(PasswordDelRequest) returns (google.protobuf.Empty);
+
+    // Payment cards // 
+
+    // CardList - возвращает список банковских карт
+    rpc CardList(google.protobuf.Empty) returns (CardListResponse);
+
+    // CardWrite запись нового
+    rpc CardWrite(CardWriteRequest) returns (google.protobuf.Empty);
+
+    // CardUpdate обновление
+    rpc CardUpdate(CardUpdateRequest) returns (google.protobuf.Empty);
+
+    // CardRead чтение
+    rpc CardRead(CardReadRequest) returns (CardReadResponse);
+    
+    // CardDelete удаление
+    rpc CardDelete(CardDelRequest) returns (google.protobuf.Empty);
+
+    // Notes
+
+    // NoteList - список
+    rpc NoteList(google.protobuf.Empty) returns (NoteListResponse);
+    
+    // NoteWrite запись нового
+    rpc NoteWrite(NoteWriteRequest) returns (google.protobuf.Empty);
+
+    // NoteUpdate обновление
+    rpc NoteUpdate(NoteUpdateRequest) returns (google.protobuf.Empty);
+
+    // NoteRead чтение
+    rpc NoteRead(NoteReadRequest) returns (NoteReadResponse);
+    
+    // NoteDelete удаление
+    rpc NoteDelete(NoteDelRequest) returns (google.protobuf.Empty);
+
+    // Binary
+
+    // BinaryList - список
+    rpc BinaryList(google.protobuf.Empty) returns (BinaryListResponse);
+    
+    // BinaryWrite запись нового
+    rpc BinaryWrite(BinaryWriteRequest) returns (BinaryWriteResponse);
+
+    // BinaryUpdate обновление
+    rpc BinaryUpdate(BinaryUpdateRequest) returns (google.protobuf.Empty);
+
+    // BinaryRead чтение информации о двоичных данных
+    rpc BinaryRead(BinaryReadRequest) returns (BinaryReadResponse);
+
+    // BinaryDelete удаление
+    rpc BinaryDelete(BinaryDelRequest) returns (google.protobuf.Empty);
+
+    // BinaryUpload потоковая выгрузка бинарника
+    rpc BinaryUpload(stream BinaryUplodStream) returns(google.protobuf.Empty);
+    
+    // BinaryDownload потоковая загрузка
+    rpc BinaryDownload(BidaryDownloadRequest) returns (stream BinaryDownloadStream);
+
+}
+
+// Ping
+message PingResponse {
+    string message = 1;
+}
+
+// Register
+
+message RegisterRequest {
+    string login = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
+    string password = 2[(buf.validate.field).string.max_len = 64];
+}
+
+message RegisterResponse {
+    string token = 1;
+}
+
+// Login 
+
+message LoginRequest {
+    string login    = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
+    string password = 2[(buf.validate.field).string.max_len = 64];    
+}
+
+message LoginResponse {
+    string token = 1;    
+}
+
+// List 
+
+message ListResponse {
+    int32 cards_count     = 1; // количество кредитных картNoteReadResponse
+    int32 notes_count     = 2; // количество заметок
+    int32 binaries_count  = 3; // количество хранимых двоичных данных
+    int32 passwords_count = 4; // количество хранимых пользователем паролей
+}
+
+// Password
+
+message PasswordListResponse {
+    repeated string names = 1;  // массив наименований  
+}
+
+message PasswordReadRequest {
+    string name = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
+}
+
+message PasswordReadResponse {
+    int64  id       = 1;
+    string name     = 2;
+    string username = 3;
+    string password = 4;
+    string notes    = 5;
+}
+
+message PasswordWriteRequest {
+    string name     = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
+    string username = 2[(buf.validate.field).string.max_len = 128];
+    string password = 3[(buf.validate.field).string.max_len = 128];
+    string notes    = 4;
+}
+
+message BinaryWriteResponse {
+    int64 id = 1;   
+}
+
+message PasswordDelRequest {
+    string name = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
+}
+
+message PasswordUpdateRequest {
+    int64 id = 1;
+    PasswordWriteRequest write = 2; 
+}
+
+// Payment card
+
+message CardListResponse {
+    repeated string names = 1;  // массив наименований  
+}
+
+message CardReadRequest {
+    string name = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
+}
+
+message CardReadResponse {
+    int64  id     = 1;
+    string name   = 2;
+    string number = 3;
+    string pin    = 4;
+    string notes  = 5;
+}
+
+message CardWriteRequest {
+    string name   = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
+    string number = 2[(buf.validate.field).string.max_len = 20];
+    string pin    = 3[(buf.validate.field).string.max_len = 10];
+    string notes  = 4;
+}
+
+message CardDelRequest {
+    string name = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
+}
+
+message CardUpdateRequest {
+    int64 id = 1;
+    CardWriteRequest write = 2; 
+}
+
+// Note
+
+message NoteListResponse {
+    repeated string names = 1;  // массив наименований  
+}
+
+message NoteReadRequest {
+    string name = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
+}
+
+message NoteReadResponse {
+    int64  id    = 1;
+    string name  = 2;
+    string notes = 3;
+}
+
+message NoteWriteRequest {
+    string name  = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
+    string notes = 2[(buf.validate.field).string.min_len = 1];
+}
+
+message NoteDelRequest {
+    string name = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
+}
+
+message NoteUpdateRequest {
+    int64 id = 1;
+    NoteWriteRequest write = 2; 
+}
+
+// Binary
+
+message BinaryListResponse {
+    repeated string names = 1;  // массив наименований  
+}
+
+message BinaryReadRequest {
+    string name = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
+}
+
+message BinaryReadResponse {
+    int64  id     = 1;
+    string name   = 2;
+    int64  size   = 3;
+    int64  bin_id = 4;
+    string notes  = 5;
+}
+
+message BinaryWriteRequest {
+    string name  = 1 [(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
+    int64  size  = 2 [(buf.validate.field).int64.gt = 1];
+    string notes = 3;
+}
+
+message BinaryDelRequest {
+    string name = 1[(buf.validate.field).string.min_len = 1, (buf.validate.field).string.max_len = 64];
+}
+
+message BinaryUpdateRequest {
+    int64 id = 1 [(buf.validate.field).int64.gt = 0];
+    int64 bin_id = 2; 
+    BinaryWriteRequest write = 3; 
+}
+
+// Binary stream
+
+message BinaryUplodStream {
+    int64 id     = 1 [(buf.validate.field).int64.gt = 0];
+    bytes chunk  = 3 [(buf.validate.field).bytes.min_len = 1];
+}
+
+message BidaryDownloadRequest {
+    int64 id = 1;
+}
+
+message BinaryDownloadStream {
+    bytes chunk  = 2;
+}

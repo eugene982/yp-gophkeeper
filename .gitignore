@@ -13,6 +13,7 @@
 
 # Binaries
 bin
+build
 
 # Dependency directories (remove the comment below to include it)
 vendor/
@@ -20,3 +21,9 @@ vendor/
 # IDEs directories
 .idea
 .vscode
+
+# Backup
+backup/
+
+# database
+database/

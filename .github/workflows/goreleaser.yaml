@@ -1,0 +1,52 @@
+name: goreleaser
+
+on:
+    pull_request:
+    push:
+      branches:
+        - main
+
+jobs:
+  artifact-build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20.x'
+
+      - name: Install dependencies
+        run: |
+            go get github.com/c-bata/go-prompt
+            go get google.golang.org/grpc
+
+      - name: Build linux
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          make buildcli-lin
+          mv build/gk-client-lin build/gk-client-${{ matrix.os }}-amd64
+
+      - name: Build darwin
+        if: matrix.os == 'macos-latest'
+        run: |
+          make buildcli-mac
+          mv build/gk-client-mac build/gk-client-${{ matrix.os }}-amd64
+
+      - name: Build windows
+        if: matrix.os == 'windows-latest'
+        run: |
+          make buildcli-win
+          move build/gk-client-win.exe build/gk-client-${{ matrix.os }}-amd64.exe 
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: gk-client-${{ matrix.os }}-amd64
+          path: build/gk-client-${{ matrix.os }}-amd64*
